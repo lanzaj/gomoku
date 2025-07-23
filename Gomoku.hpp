@@ -3,22 +3,24 @@
 
 # include <iostream>
 # include "Board.hpp"
+# include "Player.hpp"
 
 class Gomoku
 {
 
 private:
-    Board   board;
+    Board   board_;
+    Player  p_white_;
+    Player  p_black_;
 
 public:
-    Gomoku(/* args */);
+    Gomoku();
     ~Gomoku();
-
-    // Gomoku(Gomoku const & src);
-    // Gomoku & operator=(Gomoku const & rhs);
 
     // Getter
     const Board &getBoard(void) const;
+
+    void    play(void);
 };
 
 std::ostream & operator<<(std::ostream & os, Gomoku const & instance);

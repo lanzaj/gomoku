@@ -5,17 +5,23 @@
 
 class Player
 {
+    private:
+        int     capture_; // 5 capture is a win
+        char    c_;
 
-private:
-    /*data*/
+    public:
+        Player(char c);
+        ~Player();
 
-public:
-    Player(/* args */);
-    ~Player();
+        Player(Player const & src);
+        Player & operator=(Player const & rhs);
 
-    // Player(Player const & src);
-    // Player & operator=(Player const & rhs);
-};
+        // Getter
+        int getCapture() const;
+        char getChar() const;
+        
+        void addCapture(int count);
+    };
 
 std::ostream & operator<<(std::ostream & os, Player const & instance);
 

@@ -1,17 +1,35 @@
 #include "Player.hpp"
 
-Player::Player(/* args */)
-{
+Player::Player(char c) : capture_(0), c_(c) {}
+
+Player::~Player() {}
+
+Player::Player(Player const & src) : capture_(src.capture_), c_(src.c_) {}
+
+Player & Player::operator=(Player const & rhs) {
+    if (this != &rhs) {
+        this->capture_ = rhs.capture_;
+        this->c_ = rhs.c_;
+    }
+    return *this;
 }
 
-Player::~Player()
-{
+// Getter
+int Player::getCapture() const {
+    return capture_;
 }
 
-// Player::Player(Player const & src)
-// {
-// }
+char Player::getChar() const {
+    return c_;
+}
 
-// Player & Player::operator=(Player const & rhs)
-// {
-// }
+// Setter
+void Player::addCapture(int count) {
+    capture_ += count;
+}
+
+// Ostream
+std::ostream & operator<<(std::ostream & os, Player const & instance) {
+    os << "Player " << instance.getChar() << " | Captures: " << instance.getCapture();
+    return os;
+}

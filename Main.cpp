@@ -3,8 +3,6 @@
 
 int main(void) {
     Gomoku game = Gomoku();
-
-    std::cout << game.getBoard();
-    
+    game.play();
     return (0);
 }
