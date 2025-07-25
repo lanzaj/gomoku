@@ -4,8 +4,10 @@ Player::Player(char c) : capture_(0), c_(c) {}
 
 Player::~Player() {}
 
+// Copy constructor
 Player::Player(Player const & src) : capture_(src.capture_), c_(src.c_) {}
 
+// Copy assignment
 Player & Player::operator=(Player const & rhs) {
     if (this != &rhs) {
         this->capture_ = rhs.capture_;
