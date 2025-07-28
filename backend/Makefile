@@ -6,7 +6,7 @@
 #    By: jlanza <jlanza@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/16 12:05:27 by jlanza            #+#    #+#              #
-#    Updated: 2025/07/28 14:38:32 by jlanza           ###   ########.fr        #
+#    Updated: 2025/07/28 16:10:58 by jlanza           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,10 +16,7 @@ SOURCES_DIR = ./
 
 BUILD_DIR = ./build/
 
-SOURCES =	Main.cpp \
-			Board.cpp \
-			Gomoku.cpp \
-			Player.cpp
+SOURCES =	Backend.cpp
 
 OBJECTS		= $(addprefix ${BUILD_DIR}, ${SOURCES:.cpp=.o})
 
@@ -27,7 +24,7 @@ DEPS := $(OBJECTS:.o=.d)
 
 CC = c++
 
-CFLAGS = -Wall -Wextra -Werror -MMD -MP -g3 -std=c++17
+CFLAGS = -Wall -Wextra -Werror -MMD -MP -g3 -std=c++17 -Iinclude
 #-fsanitize=address
 
 RM = rm -rf
