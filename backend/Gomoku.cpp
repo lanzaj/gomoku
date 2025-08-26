@@ -1,8 +1,8 @@
 #include "Gomoku.hpp"
 
 Gomoku::Gomoku() : p_white_(Player('O')), p_black_(Player('X')) {}
-Gomoku::~Gomoku() {}
 
+Gomoku::~Gomoku() {}
 // Getter
 const Board &Gomoku::getBoard(void) const
 {

@@ -5,12 +5,14 @@
 # include <tuple>
 # include "Board.hpp"
 # include "Player.hpp"
+# include "Server.hpp"
 
 class Gomoku
 {
 
 private:
     Board   board_;
+    Server  server_;
     Player  p_white_;
     Player  p_black_;
 

@@ -9,37 +9,50 @@
 
 using json = nlohmann::json;
 
-#define PORT 65432
+#define PORT 65433
 #define BUFFER_SIZE 1024
 
 void handle_client(int client_socket) {
     char buffer[BUFFER_SIZE];
+    std::string mode = "";
+
     while (true) {
         memset(buffer, 0, BUFFER_SIZE);
-        ssize_t bytes_received = (client_socket, buffer, BUFFER_SIZE, 0);
+        ssize_t bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
         if (bytes_received <= 0) {
             break; // Client disconnected
         }
 
         try {
-            json move = json::parse(buffer);
-            std::cout << "Reçu du client : " << move.dump() << std::endl;
+            json data = json::parse(buffer);
+            std::cout << "Reçu du client : " << data.dump() << std::endl;
 
-            int x = move["x"];
-            int y = move["y"];
+            if (data.contains("mode"))
+                mode = data["mode"];
+            else
+            {
+                // [human vs ai] & [human vs human] : coup autorisé ?
 
-            json ai_response = {
-                {"to_place", {
-                    {{"x", (x + 1 < 19 ? x + 1 : x)}, {"y", y}, {"color", "white"}}
-                }},
-                {"to_remove", {
-                    {{"x", x - 1}, {"y", y}},
-                    {{"x", x - 2}, {"y", y}}
-                }}
-            };
+                int x = data["x"];
+                int y = data["y"];
 
-            std::string response_str = ai_response.dump();
-            send(client_socket, response_str.c_str(), response_str.length(), 0);
+                json json_game_state = json::array();
+
+                json_game_state.push_back({
+                    {"x", x},
+                    {"y", y},
+                    {"color", "black"}
+                });
+
+                json response = {
+                    {"game_state", json_game_state},
+                    {"win", false},
+                    {"authorized", true},
+                };
+
+                std::string response_str = response.dump();
+                send(client_socket, response_str.c_str(), response_str.length(), 0);
+            }
         } catch (const std::exception& e) {
             std::cerr << "Erreur JSON: " << e.what() << std::endl;
         }
@@ -79,7 +92,7 @@ void run_server() {
             perror("accept");
             continue;
         }
-        std::thread(handle_client, client_socket).detach();
+        handle_client(client_socket);
     }
 }
 
