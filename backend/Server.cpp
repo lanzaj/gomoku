@@ -61,6 +61,9 @@ void Server::run_server_() {
         if (client_socket > 0) {
             std::cout << "Connected" << std::endl;
             this->client_socket_ = client_socket;
+            if (close(server_fd) < 0) {
+                perror("close server_fd");
+            }
             break;
         }
     }

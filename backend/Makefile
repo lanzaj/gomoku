@@ -6,7 +6,7 @@
 #    By: jlanza <jlanza@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/16 12:05:27 by jlanza            #+#    #+#              #
-#    Updated: 2025/08/26 18:44:06 by jlanza           ###   ########.fr        #
+#    Updated: 2025/08/31 12:47:38 by jlanza           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -72,16 +72,14 @@ fclean: clean
 	$(RM)  $(NAME)
 	@clear
 
-re: fclean all
+re: fclean $(NAME)
+	./$(NAME) &
 
 memcheck: all
-	valgrind --track-fds=yes --trace-children=yes --leak-check=full --show-leak-kinds=all ./$(NAME)
+	(valgrind --track-fds=yes --trace-children=yes --leak-check=full --show-leak-kinds=all ./$(NAME) ) &
 
 run: all
-	./$(NAME)
-
-r: all
-	(./$(NAME) &) && (python3 ../frontend/front.py)
+	./$(NAME) &
 	
 avatar:
 	@echo "\n			Water. Earth. Fire. Air.\n"
@@ -105,6 +103,6 @@ avatar:
 	@echo "		⠀⠀⠀⠀⠀⠀⠀⡉⠀⠀⢙⢉⣝⣉⠙⠀⠀⠀⣆⣀⣀⣠⣀⣼⡷⠤⠽⠛⠛⠃"
 	@echo "		⠀⠀⠀⠀⠀⠀⠘⠛⠛⠛⠊⠈⠉⠉⠿⢷⣿⠾⠿⠛⠛⠛⠁⠀⠀⠀⠀⠀⠀⠀\n"
 
-.PHONY: all clean fclean re run
+.PHONY: all clean fclean memcheck re run
 
 -include $(DEPS)
