@@ -31,9 +31,10 @@ class Server
         Server(Server const & src);
         Server & operator=(Server const & rhs);
 
-        std::string init_mode();
-        std::tuple<int, int> getCoord();
-        void    send_response(Board board_, bool win, bool authorized);
+        // Functions
+        std::string             init_mode();
+        std::tuple<int, int>    getCoord();
+        void                    send_response(Board board_, bool win, bool authorized);
 
         // Exception
         class ProtocolError : public std::runtime_error {

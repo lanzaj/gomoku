@@ -9,29 +9,28 @@
 
 class Gomoku
 {
+    private:
+        Board   board_;
+        Server  server_;
+        Player  p_black_;
+        Player  p_white_;
 
-private:
-    Board   board_;
-    Server  server_;
-    Player  p_black_;
-    Player  p_white_;
 
+        void                    init_game_();
+        bool                    playTurn_(Player player, Player opponent);
+        std::tuple<int, int>    playHumanTurn_();
+        std::tuple<int, int>    playAiTurn_();
+        std::tuple<int, int>    getCoord_(void);
 
-    void    init_game_();
-    std::tuple<int, int>    playHumanTurn_();
-    std::tuple<int, int>    playAiTurn_();
-    bool    playTurn_(Player player, Player opponent);
-    std::tuple<int, int> getCoord_(void);
+    public:
+        Gomoku();
+        ~Gomoku();
 
-public:
-    Gomoku();
-    ~Gomoku();
+        // Getter
+        const Board     &getBoard(void) const;
 
-    // Getter
-    const Board &getBoard(void) const;
-
-    // Functions
-    void    play(void);
+        // Functions
+        void            play(void);
 };
 
 // operator <<

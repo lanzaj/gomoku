@@ -116,7 +116,7 @@ void    Server::send_response(Board board, bool win, bool authorized) {
     send(client_socket_, response_str.c_str(), response_str.length(), 0);
 }
 
-std::string Server::init_mode() {
+std::string     Server::init_mode() {
     json data = recv_json_();
 
     if (data.contains("mode"))

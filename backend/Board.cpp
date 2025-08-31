@@ -48,18 +48,18 @@ void Board::setBoard(char c, int x, int y) {
     board_[y][x] = c;
 }
 
-// operator <<
+// Operator <<
 std::ostream & operator<<(std::ostream & os, Board const & instance)
 {
     const char (&grid)[BOARD_SIZE][BOARD_SIZE] = instance.getBoard();
 
     os << "  ";
-    for (int x = 0; x < BOARD_SIZE; ++x)
+    for (int x = 0; x < instance.getSize(); ++x)
         os << std::setw(2) << x;
     os << "\n";
-    for (int y = 0; y < BOARD_SIZE; ++y) {
+    for (int y = 0; y < instance.getSize(); ++y) {
         os << std::setw(2) << y << " ";
-        for (int x = 0; x < BOARD_SIZE; ++x) {
+        for (int x = 0; x < instance.getSize(); ++x) {
             os << grid[y][x] << " ";
         }
         os << std::endl;
@@ -69,7 +69,7 @@ std::ostream & operator<<(std::ostream & os, Board const & instance)
 
 // Functions
 bool    Board::checkInBound(int n) {
-    return (n >= 0 && n < BOARD_SIZE);
+    return (n >= 0 && n < size_);
 }
 
 bool    Board::checkWinDirections_(Player player, int x0, int y0, int dx, int dy){
