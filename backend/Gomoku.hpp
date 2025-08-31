@@ -2,7 +2,6 @@
 # define GOMOKU_HPP
 
 # include <iostream>
-# include <tuple>
 # include "Board.hpp"
 # include "Player.hpp"
 # include "Server.hpp"
@@ -16,11 +15,10 @@ class Gomoku
         Player  p_white_;
 
 
-        void                    init_game_();
-        bool                    playTurn_(Player player, Player opponent);
-        std::tuple<int, int>    playHumanTurn_();
-        std::tuple<int, int>    playAiTurn_();
-        std::tuple<int, int>    getCoord_(void);
+        void    init_game_();
+        bool    playTurn_(Player &player, Player &opponent);
+        Coord   playHumanTurn_();
+        Coord   playAiTurn_();
 
     public:
         Gomoku();

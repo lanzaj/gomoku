@@ -111,7 +111,7 @@ class GomokuGUI:
         self.send({"x": x, "y": y})
         response = self.receive()
 
-        print(response)
+        #print(response)
 
         if not response["authorized"]:
             return  # coup refusé, on ne fait rien

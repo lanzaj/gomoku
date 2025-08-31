@@ -2,7 +2,15 @@
 #include "Gomoku.hpp"
 
 int main(void) {
-    Gomoku game = Gomoku();
-    game.play();
-    return (0);
+    try
+    {
+        Gomoku game;
+        game.play();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
+    return 0;
 }

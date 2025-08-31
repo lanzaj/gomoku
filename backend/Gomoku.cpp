@@ -1,6 +1,6 @@
 #include "Gomoku.hpp"
 
-Gomoku::Gomoku() :  p_black_(Player('X')), p_white_(Player('O')) {}
+Gomoku::Gomoku() :  p_black_(Player(Cell::Black)), p_white_(Player(Cell::White)) {}
 Gomoku::~Gomoku() {}
 
 // Getter
@@ -18,17 +18,17 @@ std::ostream & operator<<(std::ostream & os, Gomoku const & instance)
 
 // Functions
 void    Gomoku::init_game_() {
-    std::string mode = server_.init_mode().c_str();
+    std::string mode = server_.init_mode();
 
     std::cout << "MODE DE JEU " << mode << std::endl;
     if (mode == "ai") {
         p_white_.setIsHuman(false);
-    } else if (mode == "human") {;}
+    } else if (mode == "human") {}
     else if (mode == "demo") {
         p_black_.setIsHuman(false);
         p_white_.setIsHuman(false);
     } else {
-        throw Server::ProtocolError("Mode invalid");
+        throw Server::ProtocolError("Mode invalid: " + mode);
     }
 }
 
@@ -39,45 +39,46 @@ void    Gomoku::play(void) {
     }
 }
 
-std::tuple<int, int>    Gomoku::playHumanTurn_() {
-    int x, y;
-    std::tie(x, y) = server_.getCoord();
+Coord   Gomoku::playHumanTurn_() {
+    Coord coord;
+    coord = server_.getCoord();
 
-    if (!board_.checkInBound(x) || !board_.checkInBound(y)) {
+    if (!board_.checkInBound(coord.x) || !board_.checkInBound(coord.y)) {
+        server_.send_response(board_, false, false);
         throw std::out_of_range("Coordinates are out of bounds");
-        server_.send_response(board_, false, false);
     }
-    while (board_.getCell(x, y) != '.') {
+    while (board_.getCell(coord.x, coord.y) != Cell::Empty) {
         server_.send_response(board_, false, false);
-        std::tie(x, y) = server_.getCoord();
+        coord = server_.getCoord();
+        if (!board_.checkInBound(coord.x) || !board_.checkInBound(coord.y)) {
+            server_.send_response(board_, false, false);
+            throw std::out_of_range("Coordinates are out of bounds");
+        }
     }
-    return std::make_tuple(x, y);
+    return coord;
 }
 
-std::tuple<int, int>    Gomoku::playAiTurn_() {
+Coord   Gomoku::playAiTurn_() {
     server_.getCoord();
     for (int y = 0; y <  board_.getSize(); ++y)
         for (int x = 0; x < board_.getSize(); ++x)
-            if (board_.getCell(x, y) == '.')
-                return std::make_tuple(x, y);
-    return std::make_tuple(-1, -1);
+            if (board_.getCell(x, y) == Cell::Empty)
+                return Coord{x, y};
+    return Coord{-1, -1};
 }
 
-bool    Gomoku::playTurn_(Player player, Player opponent) {
-    std::tuple<int, int> coord;
-    int x, y;
+bool    Gomoku::playTurn_(Player &player, Player &opponent) {
+    Coord coord;
 
     if (player.isHuman()) {
         coord = playHumanTurn_();
-        std::cout << "Human turn" << std::endl;
     }
     else {
         coord = playAiTurn_();
-        std::cout << "Ai turn" << std::endl;
     }
 
-    std::tie(x, y) = coord;
-    board_.setBoard(player.getChar(), x, y);
+    int x = coord.x, y = coord.y;
+    board_.setBoard(player.getSymbol(), x, y);
     board_.capture(player, opponent, x, y);
     bool win = board_.checkWin(player, x, y);
 

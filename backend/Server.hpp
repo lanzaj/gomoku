@@ -2,7 +2,6 @@
 # define SERVER_HPP
 
 # include <iostream>
-# include <thread>
 # include <vector>
 # include <string>
 # include <cstring>
@@ -11,8 +10,8 @@
 # include <nlohmann/json.hpp>
 # include "Board.hpp"
 
-# define PORT 65433
-# define BUFFER_SIZE 1024
+constexpr int PORT = 65433;
+constexpr std::size_t BUFFER_SIZE = 1024;
 
 using json = nlohmann::json;
 
@@ -28,13 +27,10 @@ class Server
         Server();
         ~Server();
 
-        Server(Server const & src);
-        Server & operator=(Server const & rhs);
-
         // Functions
-        std::string             init_mode();
-        std::tuple<int, int>    getCoord();
-        void                    send_response(Board board_, bool win, bool authorized);
+        std::string init_mode();
+        Coord       getCoord();
+        void        send_response(Board const & board, bool win, bool authorized);
 
         // Exception
         class ProtocolError : public std::runtime_error {

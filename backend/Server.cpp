@@ -7,22 +7,13 @@ Server::Server()
 
 Server::~Server()
 {
-    close(client_socket_);
-}
-
-Server::Server(Server const & src) : client_socket_(src.client_socket_) {}
-
-Server & Server::operator=(Server const & rhs)
-{
-    if (this != &rhs) {
-        this->client_socket_ = rhs.client_socket_;
-    }
-    return *this;
+    if (client_socket_ >= 0)
+        close(client_socket_);
 }
 
 void Server::run_server_() {
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd == 0) {
+    if (server_fd < 0) {
         perror("socket failed");
         exit(EXIT_FAILURE);
     }
@@ -51,7 +42,7 @@ void Server::run_server_() {
         exit(EXIT_FAILURE);
     }
 
-    std::cout << "Serveur IA en écoute sur le port " << PORT << std::endl;
+    std::cout << "Server listening on port " << PORT << std::endl;
 
     while (true) {
         int client_socket = accept(server_fd, (struct sockaddr*)&address, &addrlen);
@@ -81,23 +72,22 @@ json    Server::recv_json_() {
     }
 
     json data = json::parse(buffer);
-    std::cout << "Reçu du client : " << data.dump() << std::endl;
     return data;
 }
 
-void    Server::send_response(Board board, bool win, bool authorized) {
+void    Server::send_response(Board const & board, bool win, bool authorized) {
 
     json json_game_state = json::array();
 
-    for (int y = 0; y < BOARD_SIZE; ++y) {
-        for (int x = 0; x < BOARD_SIZE; ++x) {
-            if (board.getCell(x, y) == 'X')
+    for (int y = 0; y < board.getSize(); ++y) {
+        for (int x = 0; x < board.getSize(); ++x) {
+            if (board.getCell(x, y) == Cell::Black)
                 json_game_state.push_back({
                     {"x", x},
                     {"y", y},
                     {"color", "black"}
                 });
-            if (board.getCell(x, y) == 'O')
+            if (board.getCell(x, y) == Cell::White)
                 json_game_state.push_back({
                     {"x", x},
                     {"y", y},
@@ -113,7 +103,8 @@ void    Server::send_response(Board board, bool win, bool authorized) {
     };
 
     std::string response_str = response.dump();
-    send(client_socket_, response_str.c_str(), response_str.length(), 0);
+    if (send(client_socket_, response_str.c_str(), response_str.length(), 0) < 0)
+        throw ProtocolError("Failed to send response");
 }
 
 std::string     Server::init_mode() {
@@ -125,11 +116,11 @@ std::string     Server::init_mode() {
         throw Server::ProtocolError("Missing 'mode' field in client message");
 }
 
-std::tuple<int, int>    Server::getCoord() {
+Coord   Server::getCoord() {
     json data = recv_json_();
 
     if (data.contains("x") && data.contains("y"))
-        return (std::make_tuple(data["x"], data["y"]));
+        return (Coord{data["x"], data["y"]});
     else
-        throw Server::ProtocolError("Missing 'mode' field in client message");
+        throw Server::ProtocolError("Missing 'x' or 'y' field in client message");
 }

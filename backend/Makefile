@@ -6,7 +6,7 @@
 #    By: jlanza <jlanza@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/16 12:05:27 by jlanza            #+#    #+#              #
-#    Updated: 2025/08/31 12:47:38 by jlanza           ###   ########.fr        #
+#    Updated: 2025/08/31 18:54:06 by jlanza           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,7 +20,8 @@ SOURCES =	Main.cpp \
 			Board.cpp \
 			Gomoku.cpp \
 			Player.cpp \
-			Server.cpp
+			Server.cpp \
+			Cell.cpp
 
 OBJECTS		= $(addprefix ${BUILD_DIR}, ${SOURCES:.cpp=.o})
 
