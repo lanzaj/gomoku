@@ -19,7 +19,8 @@ BUILD_DIR = ./build/
 SOURCES =	Main.cpp \
 			Board.cpp \
 			Gomoku.cpp \
-			Player.cpp
+			Player.cpp \
+			Server.cpp
 
 OBJECTS		= $(addprefix ${BUILD_DIR}, ${SOURCES:.cpp=.o})
 
@@ -78,6 +79,9 @@ memcheck: all
 
 run: all
 	./$(NAME)
+
+r: all
+	(./$(NAME) &) && (python3 ../frontend/front.py)
 	
 avatar:
 	@echo "\n			Water. Earth. Fire. Air.\n"
@@ -101,6 +105,6 @@ avatar:
 	@echo "		⠀⠀⠀⠀⠀⠀⠀⡉⠀⠀⢙⢉⣝⣉⠙⠀⠀⠀⣆⣀⣀⣠⣀⣼⡷⠤⠽⠛⠛⠃"
 	@echo "		⠀⠀⠀⠀⠀⠀⠘⠛⠛⠛⠊⠈⠉⠉⠿⢷⣿⠾⠿⠛⠛⠛⠁⠀⠀⠀⠀⠀⠀⠀\n"
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re run
 
 -include $(DEPS)

@@ -1,3 +1,4 @@
+from time import sleep
 import tkinter as tk
 import socket
 import json
@@ -10,6 +11,7 @@ PORT = 65433
 
 class GomokuGUI:
     def __init__(self, root, mode):
+        self.exit = False
         self.root = root
         self.root.title("Gomoku Frontend")
 
@@ -48,7 +50,7 @@ class GomokuGUI:
         height = root.winfo_height()
         screen_width = root.winfo_screenwidth()
         screen_height = root.winfo_screenheight()
-        x = (screen_width // 2) - (width // 2)
+        x = 0 #(screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)
         root.geometry(f"+{x}+{y}")
 
@@ -85,8 +87,24 @@ class GomokuGUI:
             self.canvas.create_line(CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, pos)
             self.canvas.create_line(pos, CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2)
 
+    def display_winner(self):
+        """
+        Display the winner at the end of the game.
+        winner: can be 'black', 'white', or a player name depending on backend
+        """
+
+        self.canvas.create_text(
+            self.canvas.winfo_width() // 2,
+            self.canvas.winfo_height() // 2,
+            text=f"Game Over!",
+            font=("Arial", 32, "bold"),
+            fill="red"
+        )
 
     def click_handler(self, event):
+        if self.exit == True:
+            exit()
+
         x = int(round((event.x - CELL_SIZE / 2) / CELL_SIZE))
         y = int(round((event.y - CELL_SIZE / 2) / CELL_SIZE))
 
@@ -98,7 +116,10 @@ class GomokuGUI:
         if not response["authorized"]:
             return  # coup refusé, on ne fait rien
         if response["win"]:
-            self.display_winner(response["win"])
+            self.redraw(response)
+            self.exit = True
+            self.display_winner()
+            return
         
         self.redraw(response)
 
@@ -150,7 +171,7 @@ class StartMenu:
         height = root.winfo_height()
         screen_width = root.winfo_screenwidth()
         screen_height = root.winfo_screenheight()
-        x = (screen_width // 2) - (width // 2)
+        x = 0 #(screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)
         root.geometry(f"+{x}+{y}")
 

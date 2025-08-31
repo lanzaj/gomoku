@@ -13,9 +13,13 @@ class Gomoku
 private:
     Board   board_;
     Server  server_;
-    Player  p_white_;
     Player  p_black_;
+    Player  p_white_;
 
+
+    void    init_game_();
+    std::tuple<int, int>    playHumanTurn_();
+    std::tuple<int, int>    playAiTurn_();
     bool    playTurn_(Player player, Player opponent);
     std::tuple<int, int> getCoord_(void);
 
