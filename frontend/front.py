@@ -96,11 +96,6 @@ class GomokuGUI:
             self.canvas.create_line(pos, CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2)
 
     def display_winner(self):
-        """
-        Display the winner at the end of the game.
-        winner: can be 'black', 'white', or a player name depending on backend
-        """
-
         self.canvas.create_text(
             self.canvas.winfo_width() // 2,
             self.canvas.winfo_height() // 2,
@@ -108,6 +103,7 @@ class GomokuGUI:
             font=("Arial", 32, "bold"),
             fill="red"
         )
+
     def click_handler(self, event):
         if self.exit == True:
             exit()
@@ -117,7 +113,7 @@ class GomokuGUI:
 
         self.send({"x": x, "y": y})
         response = self.receive()
-        #if not response:
+        if not response:
             return
 
         if not response.get("authorized", True):
@@ -139,10 +135,6 @@ class GomokuGUI:
             py = y * CELL_SIZE + CELL_SIZE // 2
             radius = CELL_SIZE // 2 - 2
             self.canvas.create_oval(px - radius, py - radius, px + radius, py + radius, fill=color)
-
-    def display_winner(self, winner):
-        win_label = tk.Label(self.root, text=f"Le joueur {winner} a gagné !", font=("Arial", 24), fg="red")
-        win_label.pack(pady=20)
 
 
 class StartMenu:
