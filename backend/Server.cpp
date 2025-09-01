@@ -124,3 +124,12 @@ Coord   Server::getCoord() {
     else
         throw Server::ProtocolError("Missing 'x' or 'y' field in client message");
 }
+
+void   Server::waitDemoFront() {
+    json data = recv_json_();
+
+    if (data.contains("waiting"))
+        return;
+    else
+        throw Server::ProtocolError("Missing 'x' or 'y' field in client message");
+}

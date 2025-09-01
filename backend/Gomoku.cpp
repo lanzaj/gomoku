@@ -1,6 +1,6 @@
 #include "Gomoku.hpp"
 
-Gomoku::Gomoku() :  p_black_(Player(Cell::Black)), p_white_(Player(Cell::White)) {}
+Gomoku::Gomoku() :  p_black_(Player(Cell::Black)), p_white_(Player(Cell::White)), mode_("") {}
 Gomoku::~Gomoku() {}
 
 // Getter
@@ -18,25 +18,31 @@ std::ostream & operator<<(std::ostream & os, Gomoku const & instance)
 
 // Functions
 void    Gomoku::init_game_() {
-    std::string mode = server_.init_mode();
+    mode_ = server_.init_mode();
 
-    std::cout << "MODE DE JEU " << mode << std::endl;
-    if (mode == "ai") {
+    std::cout << "MODE DE JEU " << mode_ << std::endl;
+    if (mode_ == "ai") {
         p_white_.setIsHuman(false);
-    } else if (mode == "human") {}
-    else if (mode == "demo") {
+    } else if (mode_ == "human") {}
+    else if (mode_ == "demo") {
         p_black_.setIsHuman(false);
         p_white_.setIsHuman(false);
     } else {
-        throw Server::ProtocolError("Mode invalid: " + mode);
+        throw Server::ProtocolError("Mode invalid: " + mode_);
     }
 }
 
 void    Gomoku::play(void) {
     init_game_();
-    while (!(playTurn_(p_black_, p_white_)
-        || playTurn_(p_white_, p_black_))) {
+    while (true) {
+        if (playTurn_(p_black_, p_white_))
+            break;
+        if (playTurn_(p_white_, p_black_))
+            break;
     }
+    // while (!(playTurn_(p_black_, p_white_)
+    //     || playTurn_(p_white_, p_black_))) {
+    // }
 }
 
 Coord   Gomoku::playHumanTurn_() {
@@ -59,11 +65,16 @@ Coord   Gomoku::playHumanTurn_() {
 }
 
 Coord   Gomoku::playAiTurn_() {
-    server_.getCoord();
+    std::cout << "DOES WAIT" << mode_ << std::endl;
+    if (mode_ == "demo") {
+        server_.waitDemoFront();
+    }
     for (int y = 0; y <  board_.getSize(); ++y)
         for (int x = 0; x < board_.getSize(); ++x)
-            if (board_.getCell(x, y) == Cell::Empty)
+            if (board_.getCell(x, y) == Cell::Empty) {
+                std::cout << x << " " << y << std::endl;
                 return Coord{x, y};
+            }
     return Coord{-1, -1};
 }
 

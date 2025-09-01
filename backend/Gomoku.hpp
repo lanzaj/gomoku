@@ -13,6 +13,7 @@ class Gomoku
         Server  server_;
         Player  p_black_;
         Player  p_white_;
+        std::string mode_;
 
 
         void    init_game_();

@@ -30,6 +30,7 @@ class Server
         // Functions
         std::string init_mode();
         Coord       getCoord();
+        void   waitDemoFront();
         void        send_response(Board const & board, bool win, bool authorized);
 
         // Exception

@@ -11,7 +11,7 @@
 # **************************************************************************** #
 
 all:
-	(cd backend && make run) && (cd frontend && python3 front.py &)
+	(cd backend && make run) && (cd frontend && python3 front.py)
 
 clean:
 	cd backend && make clean

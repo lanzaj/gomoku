@@ -2,6 +2,7 @@ from time import sleep
 import tkinter as tk
 import socket
 import json
+import time
 
 BOARD_SIZE = 19
 CELL_SIZE = 40
@@ -14,6 +15,7 @@ class GomokuGUI:
         self.root = root
         self.root.title("Gomoku Frontend")
         self.root.overrideredirect(True)  # enlève la barre Windows
+        self.mode = mode
 
         global BOARD_SIZE
         BOARD_SIZE = board_size  # applique la taille choisie
@@ -21,12 +23,11 @@ class GomokuGUI:
         self.root.after(10, lambda: self.center_window(root))
 
         canvas_size = (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE
-        self.canvas = tk.Canvas(root, width=canvas_size, height=canvas_size, bg="burlywood3")
+        self.canvas = tk.Canvas(root, width=canvas_size + 10, height=canvas_size + 10, bg="burlywood3")
         self.canvas.pack()
 
         self.draw_board()
-
-        self.canvas.bind("<Button-1>", self.click_handler)
+        
 
         self.sock = self.sock_conn()
         self.send({"mode": mode, "player_color": player_color, "start_option": start_option})
@@ -46,6 +47,21 @@ class GomokuGUI:
 
         # Associe l’action quitter
         self.canvas.tag_bind(self.quit_button, "<Button-1>", lambda e: self.root.destroy())
+
+        if not self.mode == 'demo':
+            self.canvas.bind("<Button-1>", self.click_handler)
+        else:
+            while 1:
+                print('demo')
+                self.send({'waiting':True})
+                self.root.after(10, lambda: self.center_window(root))
+                response = self.receive()
+                self.handle_move(response)
+                self.root.update_idletasks()
+                time.sleep(0.05)
+                if response.get('win'):
+                    time.sleep(2)
+                    exit(0)
 
     def sock_conn(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -113,18 +129,29 @@ class GomokuGUI:
 
         self.send({"x": x, "y": y})
         response = self.receive()
+
         if not response:
             return
-
+        
         if not response.get("authorized", True):
             return  # coup refusé
+
+        self.handle_move(response)
+        self.root.update_idletasks()
+
+        if self.mode == 'ai':
+            response = self.receive()
+            self.handle_move(response)
+
+
+    def handle_move(self, response):
+        self.redraw(response)
+
         if response.get("win"):
-            self.redraw(response)
             self.exit = True
             self.display_winner()
             return
 
-        self.redraw(response)
 
     def redraw(self, response):
         self.canvas.delete("all")
