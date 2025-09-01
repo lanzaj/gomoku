@@ -51,14 +51,12 @@ Coord   Gomoku::playHumanTurn_() {
 
     if (!board_.checkInBound(coord.x) || !board_.checkInBound(coord.y)) {
         server_.send_response(board_, false, false);
-        throw std::out_of_range("Coordinates are out of bounds");
     }
     while (board_.getCell(coord.x, coord.y) != Cell::Empty) {
         server_.send_response(board_, false, false);
         coord = server_.getCoord();
         if (!board_.checkInBound(coord.x) || !board_.checkInBound(coord.y)) {
             server_.send_response(board_, false, false);
-            throw std::out_of_range("Coordinates are out of bounds");
         }
     }
     return coord;

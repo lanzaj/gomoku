@@ -14,7 +14,7 @@ private:
     //      closed two          5
     //      open two            20          (10 each side)
     //      closed three        100
-    //      open three          600         (250 each side)
+    //      open three          600         (300 each side)
     //      closed four         5,000
     //      open four           30,000      (15,000 each side)
     //      five in a row       10,000,000
@@ -39,7 +39,7 @@ private:
 
     int     capture_threat[BOARD_SIZE][BOARD_SIZE]; // (in 1)
 
-    int     capturable[BOARD_SIZE][BOARD_SIZE]; // (in 1)
+    //int     capturable[BOARD_SIZE][BOARD_SIZE]; // (in 1)
 
     int     figures[BOARD_SIZE][BOARD_SIZE]; // 1 open threes max and fours
 
@@ -64,10 +64,10 @@ private:
     //          3 with 1 capture threat     1,000
     //          3 with 2 capture threat     2,000
     //      4                           5,000
-    //      4 with 1 capture threat     30,000
+    //      4 with 1 capture threat     40,000
     //      5                           10,000,000
     int     capture_left_to_win;
-    int     capture_left_to_loose;
+    //int     capture_left_to_loose;
 
 
 
