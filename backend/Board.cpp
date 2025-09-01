@@ -73,7 +73,7 @@ bool    Board::checkInBound(int n) const {
 }
 
 bool    Board::checkWinDirections_(Player const & player, int x0, int y0, int dx, int dy) const {
-    const Cell c = player.getSymbol();
+    const Cell c = player.getColor();
     int power = 1;
 
     int x = x0 + dx;
@@ -110,7 +110,7 @@ void    Board::captureDirection_(Player & player, Player & opponent, int x0, int
     int i = 0;
     int x = x0;
     int y = y0;
-    while (((player.getSymbol() == board_[y][x] && pattern[i]) || (opponent.getSymbol() == board_[y][x] && !pattern[i]))
+    while (((player.getColor() == board_[y][x] && pattern[i]) || (opponent.getColor() == board_[y][x] && !pattern[i]))
         && checkInBound(x) && checkInBound(y) && i < 4)
     {
         ++i;

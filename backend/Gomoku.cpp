@@ -78,7 +78,7 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
     }
 
     int x = coord.x, y = coord.y;
-    board_.setBoard(player.getSymbol(), x, y);
+    board_.setBoard(player.getColor(), x, y);
     board_.capture(player, opponent, x, y);
     bool win = board_.checkWin(player, x, y);
 

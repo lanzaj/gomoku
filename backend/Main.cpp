@@ -1,6 +1,7 @@
 #include <iostream>
 #include "Gomoku.hpp"
 
+// To Do ajouter le fait que l'on peut ne pas win si l'autre peut capturer
 int main(void) {
     try
     {
