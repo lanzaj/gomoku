@@ -11,7 +11,8 @@ PORT = 65433
 
 class GomokuGUI:
     BG = "burlywood3"
-    def __init__(self, root, mode, board_size, player_color, start_option):
+    def __init__(self, root, mode, board_size, player_color, rules):
+        self.rules = rules
         self.exit = False
         self.root = root
         self.root.title("Gomoku Frontend")
@@ -31,7 +32,9 @@ class GomokuGUI:
         self.bar(root)
 
         self.sock = self.sock_conn()
-        self.send({"mode": mode, "player_color": player_color, "start_option": start_option})
+        self.send({"mode": mode, "player_color": player_color, "start_option": rules})
+
+        self.rules_choice()
 
         if not self.mode == 'demo':
             self.canvas.bind("<Button-1>", self.click_handler)
@@ -48,7 +51,7 @@ class GomokuGUI:
                     time.sleep(2)
                     exit(0)
 
-    ############## Fenetre  ##############
+    ############## Window  ##############
 
     def bar(self, root):
         # Barre de titre custom
@@ -128,11 +131,23 @@ class GomokuGUI:
             print("Erreur réception :", e)
             return None
 
+    ##############   Draw   ##############
+
     def draw_board(self):
         for i in range(BOARD_SIZE):
             pos = i * CELL_SIZE + CELL_SIZE // 2
             self.canvas.create_line(CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, pos)
             self.canvas.create_line(pos, CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2)
+
+    def redraw(self, response):
+        self.canvas.delete("all")
+        self.draw_board()
+        for stone in response["game_state"]:
+            x, y, color = stone["x"], stone["y"], stone["color"]
+            px = x * CELL_SIZE + CELL_SIZE // 2
+            py = y * CELL_SIZE + CELL_SIZE // 2
+            radius = CELL_SIZE // 2 - 2
+            self.canvas.create_oval(px - radius, py - radius, px + radius, py + radius, fill=color)
 
     def display_winner(self):
         self.canvas.create_text(
@@ -142,6 +157,8 @@ class GomokuGUI:
             font=("Arial", 32, "bold"),
             fill="red"
         )
+
+    ##############   Click   ##############
 
     def click_handler(self, event):
         if self.exit == True:
@@ -162,6 +179,10 @@ class GomokuGUI:
         self.handle_move(response)
         self.root.update_idletasks()
 
+        if response.get('game_state') and len(response['game_state']) == 3:
+            self.swap_choice()
+        
+
         if self.mode == 'ai':
             response = self.receive()
             self.handle_move(response)
@@ -175,16 +196,80 @@ class GomokuGUI:
             self.display_winner()
             return
 
+    ##############   Rules   ##############
 
-    def redraw(self, response):
-        self.canvas.delete("all")
-        self.draw_board()
-        for stone in response["game_state"]:
-            x, y, color = stone["x"], stone["y"], stone["color"]
-            px = x * CELL_SIZE + CELL_SIZE // 2
-            py = y * CELL_SIZE + CELL_SIZE // 2
-            radius = CELL_SIZE // 2 - 2
-            self.canvas.create_oval(px - radius, py - radius, px + radius, py + radius, fill=color)
+    def rules_choice(self):
+        if self.rules == "swap":
+            self.show_swap_popup()
+
+    def show_swap_popup(self):
+        popup = tk.Toplevel(self.root)
+        popup.title("Règle Swap")
+        popup.geometry("400x200")
+        popup.transient(self.root)  # fenêtre liée à la principale
+        popup.grab_set()  # empêche d’interagir avec la fenêtre principale
+        popup.overrideredirect(True)
+        self.center_window(popup)
+
+        popup_bg = "#F0E6D2"  # beige clair
+        popup.configure(bg=popup_bg)
+
+        tk.Label(popup, text="Règle Swap", font=("Arial", 14, "bold"), bg=popup_bg).pack(pady=20)
+        tk.Label(popup, text="Le premier joueur place 2 pierre noires et 1 blanche\n Le second joueur choisira ensuite sa couleur", font=("Arial", 12), bg=popup_bg).pack(pady=10)
+
+        btn_style = {
+            "font": ("Arial", 14, "bold"),
+            "bg": popup_bg,
+            "fg": "#A17C5A",
+            "activebackground": "#5a5a8a",
+            "activeforeground": "white",
+            "relief": "flat",
+            "bd": 0,
+            "width": 20,
+            "height": 2,
+            "highlightthickness": 0
+        }
+
+        ok_btn = tk.Button(popup, text="OK", command=popup.destroy, **btn_style)
+        ok_btn.pack(pady=20)
+
+    def swap_choice(self):
+        popup = tk.Toplevel(self.root)
+        popup.title("Règle Swap")
+        popup.geometry("400x250")
+        popup.transient(self.root)  # fenêtre liée à la principale
+        popup.overrideredirect(True)
+        self.center_window(popup)
+
+        popup_bg = "#F0E6D2"  # beige clair
+        popup.configure(bg=popup_bg)
+
+        tk.Label(popup, text="Règle Swap", font=("Arial", 14, "bold"), bg=popup_bg).pack(pady=20)
+        tk.Label(popup, text="Le second joueur choisie sa couleur", font=("Arial", 12), bg=popup_bg).pack(pady=10)
+
+        btn_style = {
+            "font": ("Arial", 14, "bold"),
+            "bg": popup_bg,
+            "fg": "#A17C5A",
+            "activebackground": "#5a5a8a",
+            "activeforeground": "white",
+            "relief": "flat",
+            "bd": 0,
+            "width": 10,
+            "height": 1,
+            "highlightthickness": 0
+        }
+
+        btn_frame = tk.Frame(popup, bg=popup_bg)
+        btn_frame.pack(pady=20)
+
+        black_btn = tk.Button(btn_frame, text="Noirs", command=popup.destroy, **btn_style)
+        black_btn.pack(pady=5, fill="x")
+
+        white_btn = tk.Button(btn_frame, text="Blancs", command=popup.destroy, **btn_style)
+        white_btn.pack(pady=5, fill="x")
+
+        popup.after(10, lambda: popup.grab_set())
 
 
 class StartMenu:
@@ -228,6 +313,8 @@ class StartMenu:
 
         self.exit_button()
 
+    ############## Window ##############
+
     def center_window(self, root):
         root.update_idletasks()
         width = root.winfo_width()
@@ -237,8 +324,6 @@ class StartMenu:
         x = (screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)
         root.geometry(f"+{x}+{y}")
-
-    ############## Fenetre movible ##############
 
     def make_window_draggable(self, widget):
         widget.bind("<Button-1>", self._start_move_window)
@@ -254,13 +339,6 @@ class StartMenu:
         y = event.y_root - self._dy
         self.root.geometry(f"+{x}+{y}")
 
-    ##############                 ##############
-
-    def go_options(self, mode):
-        self.frame.destroy()
-        OptionsMenu(self.root, mode)
-
-    
     def exit_button(self):
         close_btn = tk.Button(self.frame, text="✕", command=self.root.destroy,
                             bg=self.BG, fg="#4F4F4F", bd=0, relief="flat",
@@ -268,6 +346,14 @@ class StartMenu:
                             font=("Arial", 14, "bold"), activebackground=self.BG)
         
         close_btn.place(x=600, y=-100)
+        
+    ##############                 ##############
+
+    def go_options(self, mode):
+        self.frame.destroy()
+        OptionsMenu(self.root, mode)
+
+    
 
 class OptionsMenu:
     BG = "#F0E6D2"
