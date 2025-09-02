@@ -10,6 +10,7 @@ HOST = 'localhost'
 PORT = 65433
 
 class GomokuGUI:
+    BG = "burlywood3"
     def __init__(self, root, mode, board_size, player_color, start_option):
         self.exit = False
         self.root = root
@@ -18,35 +19,21 @@ class GomokuGUI:
         self.mode = mode
 
         global BOARD_SIZE
-        BOARD_SIZE = board_size  # applique la taille choisie
+        BOARD_SIZE = board_size  # applique la taille de board choisie
 
         self.root.after(10, lambda: self.center_window(root))
 
         canvas_size = (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE
-        self.canvas = tk.Canvas(root, width=canvas_size + 10, height=canvas_size + 10, bg="burlywood3")
+        self.canvas = tk.Canvas(root, width=canvas_size, height=canvas_size, bg=self.BG)
         self.canvas.pack()
 
         self.draw_board()
-        
+        self.bar(root)
 
         self.sock = self.sock_conn()
         self.send({"mode": mode, "player_color": player_color, "start_option": start_option})
 
-
-        # Dessine une croix en haut à droite
-        size = 20
-        margin = 10
-        x1 = (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE - margin - size
-        y1 = margin
-        x2 = x1 + size
-        y2 = y1 + size
-
-        self.quit_button = self.canvas.create_rectangle(x1, y1, x2, y2, fill="red", outline="red")
-        self.canvas.create_line(x1+4, y1+4, x2-4, y2-4, fill="white", width=2)
-        self.canvas.create_line(x1+4, y2-4, x2-4, y1+4, fill="white", width=2)
-
-        # Associe l’action quitter
-        self.canvas.tag_bind(self.quit_button, "<Button-1>", lambda e: self.root.destroy())
+        # self.exit_button()
 
         if not self.mode == 'demo':
             self.canvas.bind("<Button-1>", self.click_handler)
@@ -62,6 +49,73 @@ class GomokuGUI:
                 if response.get('win'):
                     time.sleep(2)
                     exit(0)
+
+
+    def bar(self, root):
+        # Barre de titre custom
+        self.title_bar = tk.Frame(root, bg="#D2B48C", height=30)  # couleur "bois clair"
+        self.title_bar.pack(fill="x", side="top")
+
+        exit_btn = tk.Button(
+            self.title_bar,
+            text="Exit",               # croix
+            command=root.destroy,
+            bg="#D2B48C",           # fond assorti à la barre
+            fg="black",
+            bd=0,                   # pas de bordure
+            relief="flat",
+            font=("Arial", 12, "bold"),
+            highlightthickness=0,
+            activebackground="#C19A6B"  # couleur au survol
+        )
+        exit_btn.pack(side="right", padx=5)
+
+        # Rendre la barre draggable
+        self.make_draggable(self.title_bar)
+
+    def make_draggable(self, widget):
+        widget.bind("<Button-1>", self.start_move)
+        widget.bind("<B1-Motion>", self.do_move)
+
+    def start_move(self, event):
+        self._x = event.x
+        self._y = event.y
+
+    def do_move(self, event):
+        x = self.root.winfo_x() + (event.x - self._x)
+        y = self.root.winfo_y() + (event.y - self._y)
+        self.root.geometry(f"+{x}+{y}")
+
+    def exit_button(self):
+        # Taille et marges du bouton
+        btn_width = 60
+        btn_height = 30
+
+        # Coordonnées en bas à droite
+        x1 = (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE - btn_width
+        y1 = (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE
+        x2 = x1 + btn_width
+        y2 = y1 + btn_height
+
+        # Rectangle du bouton
+        self.exit_rect = self.canvas.create_rectangle(
+            x1, y1, x2, y2,
+            outline="#cc4444", width=0, tags="exit_btn"
+        )
+
+        # Texte centré dans le rectangle
+        self.exit_text = self.canvas.create_text(
+            (x1 + x2) // 2,
+            (y1 + y2) // 2,
+            text="Exit",
+            fill="#8B5E3C",
+            font=("Arial", 12, "bold"),
+            tags="exit_btn"
+        )
+
+        # Associe le clic au bouton (rectangle + texte partagent le même tag)
+        self.canvas.tag_bind("exit_btn", "<Button-1>", lambda e: self.root.destroy())
+
 
     def sock_conn(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -79,7 +133,7 @@ class GomokuGUI:
         height = root.winfo_height()
         screen_width = root.winfo_screenwidth()
         screen_height = root.winfo_screenheight()
-        x = 0 #(screen_width // 2) - (width // 2)
+        x = (screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)
         root.geometry(f"+{x}+{y}")
 
@@ -213,9 +267,11 @@ class StartMenu:
         y = (screen_height // 2) - (height // 2)
         root.geometry(f"+{x}+{y}")
 
+
     def go_options(self, mode):
         self.frame.destroy()
         OptionsMenu(self.root, mode)
+
     
     def exit_button(self):
         close_btn = tk.Button(self.frame, text="✕", command=self.root.destroy,
@@ -227,6 +283,10 @@ class StartMenu:
 
 class OptionsMenu:
     BG = "#F0E6D2"
+    BTN_COLOR = "#D2B48C"   # beige/bois clair
+    BTN_ACTIVE = "#A67B5B"  # marron clair quand sélectionné
+    BTN_TEXT = "#2B2B2B"
+
     def __init__(self, root, mode):
         self.root = root
         self.mode = mode
@@ -234,30 +294,68 @@ class OptionsMenu:
         self.frame.pack()
         root.after(10, lambda: self.center_window(root))
 
-        tk.Label(self.frame, text="Choisissez vos options", font=("Arial", 16)).pack(pady=10)
+        tk.Label(self.frame, text="Choisissez vos options", font=("Arial", 16), bg=self.BG).pack(pady=10)
 
         # Choix couleur
+        tk.Label(self.frame, text="Couleur du joueur", bg=self.BG).pack()
         self.color_var = tk.StringVar(value="black")
-        tk.Label(self.frame, text="Couleur du joueur").pack()
-        tk.Radiobutton(self.frame, text="Noir", variable=self.color_var, value="black").pack()
-        tk.Radiobutton(self.frame, text="Blanc", variable=self.color_var, value="white").pack()
+        self.color_buttons = {}
+        for color, label in [("black", "Noir"), ("white", "Blanc")]:
+            btn = tk.Button(
+                self.frame, text=label, width=12,
+                bg=self.BTN_COLOR, fg=self.BTN_TEXT,
+                relief="flat", bd=0, pady=5,
+                command=lambda c=color: self.select_option(self.color_var, c, self.color_buttons)
+            )
+            btn.pack(pady=2)
+            self.color_buttons[color] = btn
+        self.select_option(self.color_var, "black", self.color_buttons)  # valeur par défaut
 
         # Taille plateau
+        tk.Label(self.frame, text="Taille du plateau", bg=self.BG).pack()
         self.size_var = tk.IntVar(value=19)
-        tk.Label(self.frame, text="Taille du plateau").pack()
+        self.size_buttons = {}
         for size in [19, 15, 13]:
-            tk.Radiobutton(self.frame, text=f"{size} x {size}", variable=self.size_var, value=size).pack()
+            btn = tk.Button(
+                self.frame, text=f"{size} x {size}", width=12,
+                bg=self.BTN_COLOR, fg=self.BTN_TEXT,
+                relief="flat", bd=0, pady=5,
+                command=lambda s=size: self.select_option(self.size_var, s, self.size_buttons)
+            )
+            btn.pack(pady=2)
+            self.size_buttons[size] = btn
+        self.select_option(self.size_var, 19, self.size_buttons)
 
         # Option départ
+        tk.Label(self.frame, text="Règle de départ", bg=self.BG).pack()
         self.start_var = tk.StringVar(value="standard")
-        tk.Label(self.frame, text="Règle de départ").pack()
+        self.start_buttons = {}
         for opt in ["standard", "pro", "swap", "swap2"]:
-            tk.Radiobutton(self.frame, text=opt.capitalize(), variable=self.start_var, value=opt).pack()
+            btn = tk.Button(
+                self.frame, text=opt.capitalize(), width=12,
+                bg=self.BTN_COLOR, fg=self.BTN_TEXT,
+                relief="flat", bd=0, pady=5,
+                command=lambda o=opt: self.select_option(self.start_var, o, self.start_buttons)
+            )
+            btn.pack(pady=2)
+            self.start_buttons[opt] = btn
+        self.select_option(self.start_var, "standard", self.start_buttons)
 
-        tk.Button(self.frame, text="Valider", command=self.start_game).pack(pady=20)
+        # Valider
+        tk.Button(self.frame, text="Valider", command=self.start_game,
+                  bg="#8FBC8F", fg="white", font=("Arial", 12, "bold"), relief="flat",
+                  activebackground="#6B8E23", pady=5, width=14).pack(pady=20)
 
         self.exit_button()
 
+    def select_option(self, var, value, buttons):
+        """Met à jour la sélection et change la couleur des boutons"""
+        var.set(value)
+        for v, btn in buttons.items():
+            if str(v) == str(value):
+                btn.config(bg=self.BTN_ACTIVE, fg="white")
+            else:
+                btn.config(bg=self.BTN_COLOR, fg=self.BTN_TEXT)
 
     def start_game(self):
         self.frame.destroy()
@@ -284,8 +382,8 @@ class OptionsMenu:
                             bg=self.BG, fg="#4F4F4F", bd=0, relief="flat",
                             highlightthickness=0,
                             font=("Arial", 14, "bold"), activebackground="#2b2b3a")
-        
         close_btn.place(x=380, y=-100)
+
 
 
 def main():
