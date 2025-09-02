@@ -179,8 +179,11 @@ class GomokuGUI:
         self.handle_move(response)
         self.root.update_idletasks()
 
-        if response.get('game_state') and len(response['game_state']) == 3:
+        if self.rules == 'swap' and response.get('game_state') and len(response['game_state']) == 3:
             self.swap_choice()
+
+        if self.rules =='swap2' and response.get('game_state') and len(response['game_state']) == 3:
+            self.swap2_choice()
         
 
         if self.mode == 'ai':
@@ -202,7 +205,7 @@ class GomokuGUI:
         if self.rules == "swap":
             self.show_swap_popup("Règle Swap", "Le premier joueur place 2 pierre noires et 1 blanche\n Le second joueur choisira ensuite sa couleur", '400x200')
         if self.rules == "swap2":
-            self.show_swap_popup("Règle Swap2", "Le premier joueur place 2 pierre noires et 1 blanche\n Le second joueur aura 3 choix\n   -Garder les Blancs\n   -Changer de couleur\n   -Placer 2 pierres de plus et laisser le premiers joueur choisir sa couleur", '400x300')
+            self.show_swap_popup("Règle Swap2", "Le premier joueur place 2 pierre noires et 1 blanche\n Le second joueur aura 3 choix :\n   -Garder les Blancs\n   -Changer de couleur\n   -Placer 2 pierres de plus et laisser\nle premiers joueur choisir sa couleur", '400x300')
         
 
     def show_swap_popup(self, title_, text_, geo):
@@ -270,6 +273,47 @@ class GomokuGUI:
         black_btn.pack(pady=5, fill="x")
 
         white_btn = tk.Button(btn_frame, text="Blancs", command=popup.destroy, **btn_style)
+        white_btn.pack(pady=5, fill="x")
+
+        popup.after(10, lambda: popup.grab_set())
+
+    def swap2_choice(self):
+        popup = tk.Toplevel(self.root)
+        popup.title("Règle Swap2")
+        popup.geometry("400x300")
+        popup.transient(self.root)  # fenêtre liée à la principale
+        popup.overrideredirect(True)
+        self.center_window(popup)
+
+        popup_bg = "#F0E6D2"  # beige clair
+        popup.configure(bg=popup_bg)
+
+        tk.Label(popup, text="Règle Swap", font=("Arial", 14, "bold"), bg=popup_bg).pack(pady=20)
+        tk.Label(popup, text="Le second joueur choisi : ", font=("Arial", 12), bg=popup_bg).pack(pady=10)
+
+        btn_style = {
+            "font": ("Arial", 14, "bold"),
+            "bg": popup_bg,
+            "fg": "#A17C5A",
+            "activebackground": "#5a5a8a",
+            "activeforeground": "white",
+            "relief": "flat",
+            "bd": 0,
+            "width": 15,
+            "height": 1,
+            "highlightthickness": 0
+        }
+
+        btn_frame = tk.Frame(popup, bg=popup_bg)
+        btn_frame.pack(pady=25)
+
+        black_btn = tk.Button(btn_frame, text="Noirs", command=popup.destroy, **btn_style)
+        black_btn.pack(pady=5, fill="x")
+
+        white_btn = tk.Button(btn_frame, text="Blancs", command=popup.destroy, **btn_style)
+        white_btn.pack(pady=5, fill="x")
+
+        white_btn = tk.Button(btn_frame, text="Placer 2 pierres", command=popup.destroy, **btn_style)
         white_btn.pack(pady=5, fill="x")
 
         popup.after(10, lambda: popup.grab_set())
