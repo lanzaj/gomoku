@@ -29,6 +29,7 @@ class GomokuGUI:
         self.canvas.pack()
 
         self.draw_board()
+
         self.bar(root)
 
         self.sock = self.sock_conn()
@@ -38,6 +39,9 @@ class GomokuGUI:
 
         if not self.mode == 'demo':
             self.canvas.bind("<Button-1>", self.click_handler)
+            self.hover_oval = None
+            self.canvas.bind("<Motion>", self.mouse_motion)
+            self.canvas.bind("<Leave>", self.clear_hover)
         else:
             while 1:
                 print('demo')
@@ -158,6 +162,32 @@ class GomokuGUI:
             fill="red"
         )
 
+    def mouse_motion(self, event):
+        # Supprime l'ancienne pierre fantôme
+        if self.hover_oval:
+            self.canvas.delete(self.hover_oval)
+            self.hover_oval = None
+
+        # Trouve la case la plus proche
+        x = int(round((event.x - CELL_SIZE / 2) / CELL_SIZE))
+        y = int(round((event.y - CELL_SIZE / 2) / CELL_SIZE))
+
+        px = x * CELL_SIZE + CELL_SIZE // 2
+        py = y * CELL_SIZE + CELL_SIZE // 2
+        radius = CELL_SIZE // 2 - 2
+
+        # Crée un oval fantôme semi-transparent
+        self.hover_oval = self.canvas.create_oval(
+            px - radius, py - radius, px + radius, py + radius,
+            fill="black",  # ou "white" selon le joueur
+            stipple="gray25",  # effet de transparence
+            outline=""
+        )
+
+    def clear_hover(self, event):
+        if self.hover_oval:
+            self.canvas.delete(self.hover_oval)
+            self.hover_oval = None
     ##############   Click   ##############
 
     def click_handler(self, event):
