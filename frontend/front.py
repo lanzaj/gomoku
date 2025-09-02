@@ -318,7 +318,7 @@ class GomokuGUI:
         popup_bg = "#F0E6D2"  # beige clair
         popup.configure(bg=popup_bg)
 
-        tk.Label(popup, text="Règle Swap", font=("Arial", 14, "bold"), bg=popup_bg).pack(pady=20)
+        tk.Label(popup, text="Règle Swap2", font=("Arial", 14, "bold"), bg=popup_bg).pack(pady=20)
         tk.Label(popup, text="Le second joueur choisi : ", font=("Arial", 12), bg=popup_bg).pack(pady=10)
 
         btn_style = {
