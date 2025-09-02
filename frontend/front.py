@@ -200,12 +200,15 @@ class GomokuGUI:
 
     def rules_choice(self):
         if self.rules == "swap":
-            self.show_swap_popup()
+            self.show_swap_popup("Règle Swap", "Le premier joueur place 2 pierre noires et 1 blanche\n Le second joueur choisira ensuite sa couleur", '400x200')
+        if self.rules == "swap2":
+            self.show_swap_popup("Règle Swap2", "Le premier joueur place 2 pierre noires et 1 blanche\n Le second joueur aura 3 choix\n   -Garder les Blancs\n   -Changer de couleur\n   -Placer 2 pierres de plus et laisser le premiers joueur choisir sa couleur", '400x300')
+        
 
-    def show_swap_popup(self):
+    def show_swap_popup(self, title_, text_, geo):
         popup = tk.Toplevel(self.root)
         popup.title("Règle Swap")
-        popup.geometry("400x200")
+        popup.geometry(geo)
         popup.transient(self.root)  # fenêtre liée à la principale
         popup.grab_set()  # empêche d’interagir avec la fenêtre principale
         popup.overrideredirect(True)
@@ -214,8 +217,8 @@ class GomokuGUI:
         popup_bg = "#F0E6D2"  # beige clair
         popup.configure(bg=popup_bg)
 
-        tk.Label(popup, text="Règle Swap", font=("Arial", 14, "bold"), bg=popup_bg).pack(pady=20)
-        tk.Label(popup, text="Le premier joueur place 2 pierre noires et 1 blanche\n Le second joueur choisira ensuite sa couleur", font=("Arial", 12), bg=popup_bg).pack(pady=10)
+        tk.Label(popup, text=title_, font=("Arial", 14, "bold"), bg=popup_bg).pack(pady=20)
+        tk.Label(popup, text=text_, font=("Arial", 12), bg=popup_bg).pack(pady=10)
 
         btn_style = {
             "font": ("Arial", 14, "bold"),
