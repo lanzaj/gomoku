@@ -33,8 +33,6 @@ class GomokuGUI:
         self.sock = self.sock_conn()
         self.send({"mode": mode, "player_color": player_color, "start_option": start_option})
 
-        # self.exit_button()
-
         if not self.mode == 'demo':
             self.canvas.bind("<Button-1>", self.click_handler)
         else:
@@ -50,6 +48,7 @@ class GomokuGUI:
                     time.sleep(2)
                     exit(0)
 
+    ############## Fenetre  ##############
 
     def bar(self, root):
         # Barre de titre custom
@@ -70,8 +69,7 @@ class GomokuGUI:
         )
         exit_btn.pack(side="right", padx=5)
 
-        # Rendre la barre draggable
-        self.make_draggable(self.title_bar)
+        self.make_draggable(self.title_bar) # fenetre movible
 
     def make_draggable(self, widget):
         widget.bind("<Button-1>", self.start_move)
@@ -86,36 +84,17 @@ class GomokuGUI:
         y = self.root.winfo_y() + (event.y - self._y)
         self.root.geometry(f"+{x}+{y}")
 
-    def exit_button(self):
-        # Taille et marges du bouton
-        btn_width = 60
-        btn_height = 30
+    def center_window(self, root):
+        root.update_idletasks()
+        width = root.winfo_width()
+        height = root.winfo_height()
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+        x = (screen_width // 2) - (width // 2)
+        y = (screen_height // 2) - (height // 2)
+        root.geometry(f"+{x}+{y}")
 
-        # Coordonnées en bas à droite
-        x1 = (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE - btn_width
-        y1 = (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE
-        x2 = x1 + btn_width
-        y2 = y1 + btn_height
-
-        # Rectangle du bouton
-        self.exit_rect = self.canvas.create_rectangle(
-            x1, y1, x2, y2,
-            outline="#cc4444", width=0, tags="exit_btn"
-        )
-
-        # Texte centré dans le rectangle
-        self.exit_text = self.canvas.create_text(
-            (x1 + x2) // 2,
-            (y1 + y2) // 2,
-            text="Exit",
-            fill="#8B5E3C",
-            font=("Arial", 12, "bold"),
-            tags="exit_btn"
-        )
-
-        # Associe le clic au bouton (rectangle + texte partagent le même tag)
-        self.canvas.tag_bind("exit_btn", "<Button-1>", lambda e: self.root.destroy())
-
+    ##############   Socket   ##############
 
     def sock_conn(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -126,16 +105,6 @@ class GomokuGUI:
             print("Erreur connexion au backend :", e)
             sock = None
         return sock
-
-    def center_window(self, root):
-        root.update_idletasks()
-        width = root.winfo_width()
-        height = root.winfo_height()
-        screen_width = root.winfo_screenwidth()
-        screen_height = root.winfo_screenheight()
-        x = (screen_width // 2) - (width // 2)
-        y = (screen_height // 2) - (height // 2)
-        root.geometry(f"+{x}+{y}")
 
     def send(self, data):
         if not self.sock:
@@ -228,6 +197,8 @@ class StartMenu:
         self.frame.pack()
         root.after(10, lambda: self.center_window(root))
 
+        self.make_window_draggable(self.frame) # fenetre movible
+
         # Gros titre
         self.title_label = tk.Label(
             self.frame,
@@ -267,6 +238,23 @@ class StartMenu:
         y = (screen_height // 2) - (height // 2)
         root.geometry(f"+{x}+{y}")
 
+    ############## Fenetre movible ##############
+
+    def make_window_draggable(self, widget):
+        widget.bind("<Button-1>", self._start_move_window)
+        widget.bind("<B1-Motion>", self._do_move_window)
+
+    def _start_move_window(self, event):
+        # décalage entre le curseur et le coin de la fenêtre
+        self._dx = event.x_root - self.root.winfo_x()
+        self._dy = event.y_root - self.root.winfo_y()
+
+    def _do_move_window(self, event):
+        x = event.x_root - self._dx
+        y = event.y_root - self._dy
+        self.root.geometry(f"+{x}+{y}")
+
+    ##############                 ##############
 
     def go_options(self, mode):
         self.frame.destroy()
@@ -277,13 +265,12 @@ class StartMenu:
         close_btn = tk.Button(self.frame, text="✕", command=self.root.destroy,
                             bg=self.BG, fg="#4F4F4F", bd=0, relief="flat",
                             highlightthickness=0,
-                            font=("Arial", 14, "bold"), activebackground="#2b2b3a")
+                            font=("Arial", 14, "bold"), activebackground=self.BG)
         
         close_btn.place(x=600, y=-100)
 
 class OptionsMenu:
     BG = "#F0E6D2"
-    BTN_COLOR = "#D2B48C"   # beige/bois clair
     BTN_ACTIVE = "#A67B5B"  # marron clair quand sélectionné
     BTN_TEXT = "#2B2B2B"
 
@@ -293,7 +280,8 @@ class OptionsMenu:
         self.frame = tk.Frame(root, padx=200, pady=100, bg=self.BG)
         self.frame.pack()
         root.after(10, lambda: self.center_window(root))
-
+        
+        self.make_window_draggable(self.frame) # fenetre movible
         tk.Label(self.frame, text="Choisissez vos options", font=("Arial", 16), bg=self.BG).pack(pady=10)
 
         # Choix couleur
@@ -303,7 +291,7 @@ class OptionsMenu:
         for color, label in [("black", "Noir"), ("white", "Blanc")]:
             btn = tk.Button(
                 self.frame, text=label, width=12,
-                bg=self.BTN_COLOR, fg=self.BTN_TEXT,
+                bg=self.BG, fg=self.BTN_TEXT,
                 relief="flat", bd=0, pady=5,
                 command=lambda c=color: self.select_option(self.color_var, c, self.color_buttons)
             )
@@ -318,7 +306,7 @@ class OptionsMenu:
         for size in [19, 15, 13]:
             btn = tk.Button(
                 self.frame, text=f"{size} x {size}", width=12,
-                bg=self.BTN_COLOR, fg=self.BTN_TEXT,
+                bg=self.BG, fg=self.BTN_TEXT,
                 relief="flat", bd=0, pady=5,
                 command=lambda s=size: self.select_option(self.size_var, s, self.size_buttons)
             )
@@ -333,7 +321,7 @@ class OptionsMenu:
         for opt in ["standard", "pro", "swap", "swap2"]:
             btn = tk.Button(
                 self.frame, text=opt.capitalize(), width=12,
-                bg=self.BTN_COLOR, fg=self.BTN_TEXT,
+                bg=self.BG, fg=self.BTN_TEXT,
                 relief="flat", bd=0, pady=5,
                 command=lambda o=opt: self.select_option(self.start_var, o, self.start_buttons)
             )
@@ -348,6 +336,24 @@ class OptionsMenu:
 
         self.exit_button()
 
+    ############## Fenetre movible ##############
+
+    def make_window_draggable(self, widget):
+        widget.bind("<Button-1>", self._start_move_window)
+        widget.bind("<B1-Motion>", self._do_move_window)
+
+    def _start_move_window(self, event):
+        # décalage entre le curseur et le coin de la fenêtre
+        self._dx = event.x_root - self.root.winfo_x()
+        self._dy = event.y_root - self.root.winfo_y()
+
+    def _do_move_window(self, event):
+        x = event.x_root - self._dx
+        y = event.y_root - self._dy
+        self.root.geometry(f"+{x}+{y}")
+
+    ##############                   ##############
+
     def select_option(self, var, value, buttons):
         """Met à jour la sélection et change la couleur des boutons"""
         var.set(value)
@@ -355,7 +361,7 @@ class OptionsMenu:
             if str(v) == str(value):
                 btn.config(bg=self.BTN_ACTIVE, fg="white")
             else:
-                btn.config(bg=self.BTN_COLOR, fg=self.BTN_TEXT)
+                btn.config(bg=self.BG, fg=self.BTN_TEXT)
 
     def start_game(self):
         self.frame.destroy()
@@ -381,7 +387,7 @@ class OptionsMenu:
         close_btn = tk.Button(self.frame, text="✕", command=self.root.destroy,
                             bg=self.BG, fg="#4F4F4F", bd=0, relief="flat",
                             highlightthickness=0,
-                            font=("Arial", 14, "bold"), activebackground="#2b2b3a")
+                            font=("Arial", 14, "bold"), activebackground=self.BG)
         close_btn.place(x=380, y=-100)
 
 
