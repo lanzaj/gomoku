@@ -96,6 +96,8 @@ class GomokuGUI:
         width = root.winfo_width()
         height = root.winfo_height()
         screen_width = root.winfo_screenwidth()
+        if screen_width > 2000:
+            screen_width //= 2
         screen_height = root.winfo_screenheight()
         x = (screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)
@@ -397,6 +399,8 @@ class StartMenu:
         width = root.winfo_width()
         height = root.winfo_height()
         screen_width = root.winfo_screenwidth()
+        if screen_width > 2000:
+            screen_width //= 2
         screen_height = root.winfo_screenheight()
         x = (screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)
@@ -541,6 +545,8 @@ class OptionsMenu:
         width = root.winfo_width()
         height = root.winfo_height()
         screen_width = root.winfo_screenwidth()
+        if screen_width > 2000:
+            screen_width //= 2
         screen_height = root.winfo_screenheight()
         x = (screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)
