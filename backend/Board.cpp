@@ -7,26 +7,6 @@ Board::Board() : size_(BOARD_SIZE)
             board_[i][j] = Cell::Empty;
 }
 
-Board::~Board() {}
-
-// Copy constructor
-Board::Board(Board const & src) : size_(src.size_) {
-    for (int i = 0; i < size_; ++i)
-        for (int j = 0; j < size_; ++j)
-            board_[i][j] = src.board_[i][j];
-}
-
-// Copy assignment
-Board & Board::operator=(Board const & rhs) {
-    if (this != &rhs) {
-        size_ = rhs.size_;
-        for (int y = 0; y < size_; ++y)
-            for (int x = 0; x < size_; ++x)
-                board_[y][x] = rhs.board_[y][x];
-    }
-    return *this;
-}
-
 // Getter
 const Cell (&Board::getBoard() const)[BOARD_SIZE][BOARD_SIZE] {
     return board_;
@@ -101,8 +81,8 @@ bool    Board::checkWin(Player const & player, int x, int y) const {
     return (checkWinDirections_(player, x, y, 1, 0)   // Horizontal
         || checkWinDirections_(player, x, y, 0, 1)    // Vertical
         || checkWinDirections_(player, x, y, 1, 1)    // Diagonal decreasing
-        || checkWinDirections_(player, x, y, 1, -1)
-        || player.getCapture() >= 5); // Diagonal increasing
+        || checkWinDirections_(player, x, y, 1, -1)   // Diagonal increasing
+        || getCapture_(player) >= 5);                 
 }
 
 void    Board::captureDirection_(Player & player, Player & opponent, int x0, int y0, int dx, int dy) {
@@ -120,7 +100,7 @@ void    Board::captureDirection_(Player & player, Player & opponent, int x0, int
     if (i == 4) {
         setBoard(Cell::Empty, x0 + dx, y0 + dy);
         setBoard(Cell::Empty, x0 + 2 * dx, y0 + 2 * dy);
-        player.incrementCapture();
+        incrementCapture_(player);
     }
 }
 
@@ -135,4 +115,20 @@ void    Board::capture(Player &player, Player &opponent, int x, int y) {
     for (const auto& [dx, dy] : directions) {
         captureDirection_(player, opponent, x, y, dx, dy);
     }
+}
+
+int Board::getCapture_(Player const & player) const {
+    return getPlayerState_(player).captured;
+}
+
+PlayerState& Board::getPlayerState_(const Player& player) {
+    return (player.getColor() == Cell::Black) ? black_ : white_;
+}
+
+const PlayerState& Board::getPlayerState_(const Player& player) const {
+    return (player.getColor() == Cell::Black) ? black_ : white_;
+}
+
+void    Board::incrementCapture_(Player const & player) {
+    getPlayerState_(player).captured += 1;
 }
