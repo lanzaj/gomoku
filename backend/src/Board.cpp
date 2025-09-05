@@ -1,0 +1,290 @@
+#include "Board.hpp"
+
+Board::Board() : size_(BOARD_SIZE) 
+{
+    for (int i = 0; i < size_; ++i)
+        for (int j = 0; j < size_; ++j)
+            board_[i][j] = Cell::Empty;
+    black_.color = Cell::Black;
+    white_.color = Cell::White;
+}
+
+// Getter
+const Cell (&Board::getBoard() const)[BOARD_SIZE][BOARD_SIZE] {
+    return board_;
+}
+
+Cell  Board::getCell(Coord coord) const {
+    if (!checkInBound(coord.x, coord.y)) {
+        return Cell::Empty;
+    }
+    return board_[coord.y][coord.x];
+}
+
+int   Board::getSize() const {
+    return size_;
+}
+
+
+Cell  Board::reverse(Cell const & c) const {
+    if (c == Cell::Black)
+        return Cell::White;
+    if (c == Cell::White)
+        return Cell::Black;
+    return Cell::Empty;
+}
+
+// Setter
+void Board::setBoard(Cell color, Coord coord) {
+    board_[coord.y][coord.x] = color;
+    updateAlignment_(coord);
+    updateHeatMap_(coord);
+    // std::cout << *this;
+}
+
+// Operator <<
+std::ostream & operator<<(std::ostream & os, Board const & instance)
+{
+    const Cell (&grid)[BOARD_SIZE][BOARD_SIZE] = instance.getBoard();
+
+    os << "  ";
+    for (int x = 0; x < instance.getSize(); ++x)
+        os << std::setw(2) << x;
+    os << std::endl;
+    for (int y = 0; y < instance.getSize(); ++y) {
+        os << std::setw(2) << y << " ";
+        for (int x = 0; x < instance.getSize(); ++x) {
+            os << grid[y][x] << " ";
+        }
+        os << std::endl;
+    }
+    return os;
+}
+
+// Operator <<
+std::ostream & operator<<(std::ostream & os, PlayerState const & instance)
+{
+    int size = sizeof(instance.up) / sizeof(instance.up[0]);
+    os << "right                                       left" << std::endl;
+    os << "  ";
+    for (int x = 0; x < size; ++x)
+        os << std::setw(2) << x;
+    os << "         ";
+    for (int x = 0; x < size; ++x)
+        os << std::setw(2) << x;
+    os << std::endl;
+    for (int y = 0; y < size; ++y) {
+        os << std::setw(2) << y << " ";
+        for (int x = 0; x < size; ++x) {
+            os << instance.right[y][x] << " ";
+        }
+        os << "         ";
+        for (int x = 0; x < size; ++x) {
+            os << instance.left[y][x] << " ";
+        }
+        os << std::endl;
+    }
+
+    return os;
+}
+
+std::ostream & operator<<(std::ostream & os, int board[BOARD_SIZE][BOARD_SIZE])
+{
+    os << "  ";
+    for (int x = 0; x < BOARD_SIZE; ++x)
+        os << std::setw(2) << x;
+    os << std::endl;
+    for (int y = 0; y < BOARD_SIZE; ++y) {
+        os << std::setw(2) << y << " ";
+        for (int x = 0; x < BOARD_SIZE; ++x) {
+            os << board[y][x] << " ";
+        }
+        os << std::endl;
+    }
+
+    return os;
+}
+
+// Functions
+bool    Board::checkInBound(int n) const {
+    return (n >= 0 && n < size_);
+}
+
+bool    Board::checkInBound(int a, int b) const {
+    return ((a >= 0 && a < size_) && (b >= 0 && b < size_));
+}
+
+bool    Board::checkWinDirection_(Player const & player, Coord coord, Direction dir) const {
+    int x0 = coord.x, y0 = coord.y, dx = dir.dx, dy = dir.dy;
+    const Cell c = player.getColor();
+    int power = 1;
+
+    int x = x0 + dx;
+    int y = y0 + dy;
+    while (checkInBound(x, y) && c == board_[y][x]) {
+        ++power;
+        x += dx;
+        y += dy;
+    }
+    x = x0 - dx;
+    y = y0 - dy;
+    while (checkInBound(x, y) && c == board_[y][x]) {
+        ++power;
+        x -= dx;
+        y -= dy;
+    }
+    if (power >= 5) {
+        std::cout << "WIN!" << std::endl;
+        return true;
+    }
+    return false;
+}
+
+bool    Board::checkWin(Player const & player, Coord coord) const {
+    return (checkWinDirection_(player, coord, RIGHT)
+        || checkWinDirection_(player, coord, UP)
+        || checkWinDirection_(player, coord, DOWN_RIGHT)
+        || checkWinDirection_(player, coord, UP_RIGHT)
+        || getCapture_(player) >= 5);                 
+}
+
+void    Board::captureDirection_(Player & player, Player & opponent, Coord coord, Direction dir) {
+    const bool pattern[4] = {true, false, false, true};
+    int i = 0, y0 = coord.y, x0 = coord.x, dx = dir.dx, dy = dir.dy, x = coord.x, y = coord.y;
+    while (((player.getColor() == board_[y][x] && pattern[i]) || (opponent.getColor() == board_[y][x] && !pattern[i]))
+        && checkInBound(x, y) && i < 4)
+    {
+        ++i;
+        x += dx;
+        y += dy;
+    }
+    if (i == 4) {
+        setBoard(Cell::Empty, {x0 + dx, y0 + dy});
+        setBoard(Cell::Empty, {x0 + 2 * dx, y0 + 2 * dy});
+        incrementCapture_(player);
+    }
+}
+
+void    Board::capture(Player &player, Player &opponent, Coord coord) {
+    for (const auto& dir : DIRECTIONS) {
+        captureDirection_(player, opponent, coord, dir);
+    }
+}
+
+void Board::updateAlignmentDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir) {
+    int i = 0, dx = dir.dx, dy = dir.dy, y0 = coord.y - dy, x0 = coord.x - dx;
+
+    alignment[coord.y][coord.x] = 0;
+
+    // Go to the start
+    while (checkInBound(x0, y0) && board_[y0][x0] == color) {
+        alignment[y0][x0] = 0;
+        x0 -= dx;
+        y0 -= dy;
+    }
+    
+    if (checkInBound(x0, y0))
+        alignment[y0][x0] = 0;
+
+    // check if closed on the start side
+    bool start_closed = !checkInBound(x0, y0) || board_[y0][x0] != Cell::Empty;
+    
+    int x = x0 + dx, y = y0 + dy;
+    while (checkInBound(x, y)
+        && (color == board_[y][x]))
+    {
+        alignment[y][x] = 0;
+        x += dx;
+        y += dy;
+        ++i;
+    }
+
+    // check if closed on the start side
+    bool end_closed = !checkInBound(x, y) || board_[y][x] != Cell::Empty;
+
+    // check free space
+    int start_x = coord.x;
+    int start_y = coord.y;
+    int free_space = 0;
+    while (checkInBound(x, y) && (board_[y][x] == color || board_[y][x] == Cell::Empty)) {
+        start_x -= dx;
+        start_y -= dy;
+    }
+    start_x += dx;
+    start_y += dy;
+    x = start_x;
+    y = start_y;
+    while (checkInBound(x, y) && (board_[y][x] == color || board_[y][x] == Cell::Empty)) {
+        x += dx;
+        y += dy;
+        ++free_space;
+    }
+    if (free_space < 5) {
+        x = start_x;
+        y = start_y;
+        while (checkInBound(x, y) && (board_[y][x] == color || board_[y][x] == Cell::Empty)) {
+            x += dx;
+            y += dy;
+            alignment[y][x] = 0;
+        }
+        return;
+    }
+
+    // Rate the cell
+    if (!end_closed && !start_closed) {
+        alignment[y0][x0] = open_score[i] / 2;
+    }
+    else if (!start_closed) {
+        alignment[y0][x0] = closed_score[i];
+    }
+}
+
+void    Board::updateAlignment_(Coord coord) {
+    updateAlignmentDirection_(Cell::Black, black_.right, coord, RIGHT);
+    updateAlignmentDirection_(Cell::Black, black_.left, coord, LEFT);
+    updateAlignmentDirection_(Cell::Black, black_.up, coord, UP);
+    updateAlignmentDirection_(Cell::Black, black_.down, coord, DOWN);
+    updateAlignmentDirection_(Cell::Black, black_.upRight, coord, UP_RIGHT);
+    updateAlignmentDirection_(Cell::Black, black_.upLeft, coord, UP_LEFT);
+    updateAlignmentDirection_(Cell::Black, black_.downRight, coord, DOWN_RIGHT);
+    updateAlignmentDirection_(Cell::Black, black_.downLeft, coord, DOWN_LEFT);
+
+    updateAlignmentDirection_(Cell::White, white_.right, coord, RIGHT);
+    updateAlignmentDirection_(Cell::White, white_.left, coord, LEFT);
+    updateAlignmentDirection_(Cell::White, white_.up, coord, UP);
+    updateAlignmentDirection_(Cell::White, white_.down, coord, DOWN);
+    updateAlignmentDirection_(Cell::White, white_.upRight, coord, UP_RIGHT);
+    updateAlignmentDirection_(Cell::White, white_.upLeft, coord, UP_LEFT);
+    updateAlignmentDirection_(Cell::White, white_.downRight, coord, DOWN_RIGHT);
+    updateAlignmentDirection_(Cell::White, white_.downLeft, coord, DOWN_LEFT);
+    std::cout << black_;
+    std::cout << *this;
+}
+
+void    Board::updateHeatMap_(Coord coord) {
+    heatMap_[coord.y][coord.x] = 4;
+    for (int i = 3; i > 0; --i) {
+        for (auto dir : DIRECTIONS) {
+            int new_x = coord.x + dir.dx * i;
+            int new_y = coord.y + dir.dy * i;
+            if (checkInBound(new_x, new_y))
+                heatMap_[new_y][new_x] = std::max(heatMap_[new_y][new_x], 4 - i);
+        }
+    }
+}
+
+int Board::getCapture_(Player const & player) const {
+    return getPlayerState_(player).captured;
+}
+
+PlayerState& Board::getPlayerState_(const Player& player) {
+    return (player.getColor() == Cell::Black) ? black_ : white_;
+}
+
+const PlayerState& Board::getPlayerState_(const Player& player) const {
+    return (player.getColor() == Cell::Black) ? black_ : white_;
+}
+
+void    Board::incrementCapture_(Player const & player) {
+    getPlayerState_(player).captured += 1;
+}
