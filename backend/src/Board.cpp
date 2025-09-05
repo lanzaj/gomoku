@@ -105,6 +105,24 @@ std::ostream & operator<<(std::ostream & os, int board[BOARD_SIZE][BOARD_SIZE])
     return os;
 }
 
+// Private Getter
+int Board::getCapture_(Player const & player) const {
+    return getPlayerState_(player).captured;
+}
+
+PlayerState& Board::getPlayerState_(const Player& player) {
+    return (player.getColor() == Cell::Black) ? black_ : white_;
+}
+
+const PlayerState& Board::getPlayerState_(const Player& player) const {
+    return (player.getColor() == Cell::Black) ? black_ : white_;
+}
+
+// Private Setter
+void    Board::incrementCapture_(Player const & player) {
+    getPlayerState_(player).captured += 1;
+}
+
 // Functions
 bool    Board::checkInBound(int n) const {
     return (n >= 0 && n < size_);
@@ -148,7 +166,7 @@ bool    Board::checkWin(Player const & player, Coord coord) const {
         || getCapture_(player) >= 5);                 
 }
 
-void    Board::captureDirection_(Player & player, Player & opponent, Coord coord, Direction dir) {
+void    Board::captureDirection_(Player const & player, Player const & opponent, Coord coord, Direction dir) {
     const bool pattern[4] = {true, false, false, true};
     int i = 0, y0 = coord.y, x0 = coord.x, dx = dir.dx, dy = dir.dy, x = coord.x, y = coord.y;
     while (((player.getColor() == board_[y][x] && pattern[i]) || (opponent.getColor() == board_[y][x] && !pattern[i]))
@@ -165,9 +183,42 @@ void    Board::captureDirection_(Player & player, Player & opponent, Coord coord
     }
 }
 
-void    Board::capture(Player &player, Player &opponent, Coord coord) {
+void    Board::capture(Player const & player, Player const & opponent, Coord coord) {
     for (const auto& dir : DIRECTIONS) {
         captureDirection_(player, opponent, coord, dir);
+    }
+}
+
+void Board::closeAlignmentDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir) {
+    int dx = dir.dx, dy = dir.dy, y = coord.y, x = coord.x;
+
+    // Step 1: move backward to find start of possible alignment
+    while (checkInBound(x, y) && (board_[y][x] == color || board_[y][x] == Cell::Empty)) {
+        x -= dx;
+        y -= dy;
+    }
+
+    // Step 2: count total free space
+    int free_space = 0;
+    x += dx;
+    y += dy;
+    int start_x = x;
+    int start_y = y;
+    while (checkInBound(x, y) && (board_[y][x] == color || board_[y][x] == Cell::Empty)) {
+        x += dx;
+        y += dy;
+        ++free_space;
+    }
+
+    // Step 3: if not enough space, clear the alignment marks
+    if (free_space < 5) {
+        x = start_x;
+        y = start_y;
+        while (checkInBound(x, y) && (board_[y][x] == color || board_[y][x] == Cell::Empty)) {
+            alignment[y][x] = 0;
+            x += dx;
+            y += dy;
+        }
     }
 }
 
@@ -202,34 +253,6 @@ void Board::updateAlignmentDirection_(Cell const & color, int (&alignment)[BOARD
     // check if closed on the start side
     bool end_closed = !checkInBound(x, y) || board_[y][x] != Cell::Empty;
 
-    // check free space
-    int start_x = coord.x;
-    int start_y = coord.y;
-    int free_space = 0;
-    while (checkInBound(x, y) && (board_[y][x] == color || board_[y][x] == Cell::Empty)) {
-        start_x -= dx;
-        start_y -= dy;
-    }
-    start_x += dx;
-    start_y += dy;
-    x = start_x;
-    y = start_y;
-    while (checkInBound(x, y) && (board_[y][x] == color || board_[y][x] == Cell::Empty)) {
-        x += dx;
-        y += dy;
-        ++free_space;
-    }
-    if (free_space < 5) {
-        x = start_x;
-        y = start_y;
-        while (checkInBound(x, y) && (board_[y][x] == color || board_[y][x] == Cell::Empty)) {
-            x += dx;
-            y += dy;
-            alignment[y][x] = 0;
-        }
-        return;
-    }
-
     // Rate the cell
     if (!end_closed && !start_closed) {
         alignment[y0][x0] = open_score[i] / 2;
@@ -237,6 +260,10 @@ void Board::updateAlignmentDirection_(Cell const & color, int (&alignment)[BOARD
     else if (!start_closed) {
         alignment[y0][x0] = closed_score[i];
     }
+
+    // check free space is at least 5
+    closeAlignmentDirection_(color, alignment, coord, dir);
+    closeAlignmentDirection_(color, alignment, coord, {-dx, -dy});
 }
 
 void    Board::updateAlignment_(Coord coord) {
@@ -257,8 +284,8 @@ void    Board::updateAlignment_(Coord coord) {
     updateAlignmentDirection_(Cell::White, white_.upLeft, coord, UP_LEFT);
     updateAlignmentDirection_(Cell::White, white_.downRight, coord, DOWN_RIGHT);
     updateAlignmentDirection_(Cell::White, white_.downLeft, coord, DOWN_LEFT);
-    std::cout << black_;
-    std::cout << *this;
+    // std::cout << black_;
+    // std::cout << *this;
 }
 
 void    Board::updateHeatMap_(Coord coord) {
@@ -273,18 +300,60 @@ void    Board::updateHeatMap_(Coord coord) {
     }
 }
 
-int Board::getCapture_(Player const & player) const {
-    return getPlayerState_(player).captured;
+int Board::evaluateAlignments_(PlayerState const & state) {
+    int score = 0;
+    for (int y = 0; y < size_; ++y) {
+        for (int x = 0; x < size_; ++x) {
+            score += state.right[y][x];
+            score += state.left[y][x];
+            score += state.up[y][x];
+            score += state.down[y][x];
+            score += state.upRight[y][x];
+            score += state.downLeft[y][x];
+            score += state.upLeft[y][x];
+            score += state.downRight[y][x];
+        }
+    }
+    return score;
 }
 
-PlayerState& Board::getPlayerState_(const Player& player) {
-    return (player.getColor() == Cell::Black) ? black_ : white_;
+/////////////////////////////////////////////////////////////////////
+///////////////////MINIMAX///////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
+
+int Board::evaluate(Player const & player, Player const & opponent) {
+    int score = 0;
+    PlayerState player_state = getPlayerState_(player);
+    PlayerState opponent_state = getPlayerState_(opponent);
+
+    // 1. Win / Lose conditions
+    if (player_state.captured >= 5) return +INF;  // Capture win rule
+    if (opponent_state.captured >= 5) return -INF;
+
+    // 2. Alignment scores
+    score += evaluateAlignments_(player_state);
+    score -= evaluateAlignments_(opponent_state) * 2;  // Penalize opponent (stronger weight)
+
+    // 3. Capture scores
+    score += capture_score[player_state.captured];
+    score -= capture_score[opponent_state.captured];
+
+    return -score;
 }
 
-const PlayerState& Board::getPlayerState_(const Player& player) const {
-    return (player.getColor() == Cell::Black) ? black_ : white_;
+bool                Board::isGameOver() {
+    return false;
 }
 
-void    Board::incrementCapture_(Player const & player) {
-    getPlayerState_(player).captured += 1;
+std::vector<Coord>  Board::generateMoves() {
+    std::vector<Coord> ret;
+
+    for (int y = 0; y < size_; ++y) {
+        for (int x = 0; x < size_; ++x) {
+            if (heatMap_[y][x] > 0 && heatMap_[y][x] != 4) {
+                ret.push_back({x, y});
+            }
+        }
+    }
+    return ret;
 }

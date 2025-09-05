@@ -2,14 +2,17 @@
 # define GOMOKU_HPP
 
 # include <iostream>
+# include <stack>
 # include "Board.hpp"
 # include "Player.hpp"
 # include "Server.hpp"
 
+struct MoveEval { int score; Coord bestMove;};
+
 class Gomoku
 {
     private:
-        Board   board_;
+        std::stack<Board> board_;
         Server  server_;
         Player  p_black_;
         Player  p_white_;
@@ -19,8 +22,10 @@ class Gomoku
         void    init_game_();
         bool    playTurn_(Player &player, Player &opponent);
         Coord   playHumanTurn_();
-        Coord   playAiTurn_();
-
+        Coord   playAiTurn_(Player const & player, Player const & opponent);
+        
+        void    play_(Coord coord, Player const & player,  Player const & opponent);
+        void    undo_();
     public:
         Gomoku();
         ~Gomoku();
@@ -30,6 +35,7 @@ class Gomoku
 
         // Functions
         void            play(void);
+        MoveEval        minimax(int depth, int alpha, int beta, bool maximizing, Player const & player, Player const & opponent);
 };
 
 // operator <<

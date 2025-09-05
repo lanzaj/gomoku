@@ -5,7 +5,11 @@
 # include <iomanip>
 # include "Player.hpp"
 # include "Cell.hpp"
+# include <climits>
+# include <vector>
 
+constexpr int INF = INT_MAX;
+constexpr int NEG_INF = INT_MIN;
 constexpr int BOARD_SIZE = 19;
 
 struct Coord { int x; int y; };
@@ -45,11 +49,12 @@ class Board
         int         heatMap_[BOARD_SIZE][BOARD_SIZE]{}; // 0=ignore, >0=near activity
 
         bool        checkWinDirection_(Player const & player, Coord coord, Direction dir) const;
-        void        captureDirection_(Player & player, Player & opponent, Coord coord, Direction dir);
+        void        captureDirection_(Player const & player, Player const & opponent, Coord coord, Direction dir);
         void        closeAlignmentDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
         void        updateAlignmentDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
         void        updateAlignment_(Coord coord);
         void        updateHeatMap_(Coord coord);
+        int         evaluateAlignments_(PlayerState const & state);
 
         // Getter
         int                 getCapture_(Player const & player) const;
@@ -80,6 +85,8 @@ class Board
         static constexpr int open_score[6] = {0, 0, 20, 600, 33600, 3024000};
         static constexpr int closed_score[6] = {0, 0, 5, 100, 4200, 3024000};
 
+        static constexpr int capture_score[6] = {0, 50, 200, 1000, 6000, INF};
+
         Board(); 
         ~Board() = default;
 
@@ -90,7 +97,7 @@ class Board
         const Cell (&getBoard() const)[BOARD_SIZE][BOARD_SIZE];
         Cell        getCell(Coord coord) const;
         int         getSize() const;
-        Cell  reverse(Cell const & c) const;
+        Cell        reverse(Cell const & c) const;
 
         // Setter
         void    setBoard(Cell color, Coord coord);
@@ -99,7 +106,11 @@ class Board
         bool    checkInBound(int n) const;
         bool    checkInBound(int a, int b) const;
         bool    checkWin(Player const & player, Coord coord) const;
-        void    capture(Player & player, Player &opponent, Coord coord);
+        void    capture(Player const & player, Player const & opponent, Coord coord);
+        
+        int                 evaluate(Player const & player, Player const & opponent);
+        bool                isGameOver();
+        std::vector<Coord>  generateMoves();
 };
 
 std::ostream & operator<<(std::ostream & os, Board const & instance);

@@ -1,12 +1,14 @@
 #include "Gomoku.hpp"
 
-Gomoku::Gomoku() :  p_black_(Player(Cell::Black)), p_white_(Player(Cell::White)), mode_("") {}
+Gomoku::Gomoku() :  p_black_(Player(Cell::Black)), p_white_(Player(Cell::White)), mode_("") {
+    board_.push(Board());
+}
 Gomoku::~Gomoku() {}
 
 // Getter
 const Board &Gomoku::getBoard(void) const
 {
-    return board_;
+    return board_.top();
 }
 
 // Operator <<
@@ -46,53 +48,109 @@ void    Gomoku::play(void) {
 }
 
 Coord   Gomoku::playHumanTurn_() {
+    Board board = getBoard();
     Coord coord;
     coord = server_.getCoord();
 
-    if (!board_.checkInBound(coord.x, coord.y)) {
-        server_.send_response(board_, false, false);
+    if (!board.checkInBound(coord.x, coord.y)) {
+        server_.send_response(board, false, false);
     }
-    while (board_.getCell(coord) != Cell::Empty) {
-        server_.send_response(board_, false, false);
+    while (board.getCell(coord) != Cell::Empty) {
+        server_.send_response(board, false, false);
         coord = server_.getCoord();
-        if (!board_.checkInBound(coord.x, coord.y)) {
-            server_.send_response(board_, false, false);
+        if (!board.checkInBound(coord.x, coord.y)) {
+            server_.send_response(board, false, false);
         }
     }
     return coord;
 }
 
-Coord   Gomoku::playAiTurn_() {
-    std::cout << "DOES WAIT" << mode_ << std::endl;
+MoveEval Gomoku::minimax(int depth, int alpha, int beta, bool maximizing, 
+                 Player const & ai, Player const & player) {
+    if (depth == 0 || board_.top().isGameOver()) {
+        if (maximizing)
+            return { board_.top().evaluate(ai, player), Coord{-1,-1} };
+        else
+            return { board_.top().evaluate(player, ai), Coord{-1,-1} };
+    }
+
+    if (maximizing) {
+        MoveEval best = { -INF, Coord{-1, -1} };
+        for (auto move : board_.top().generateMoves()) {
+            play_(move, ai, player);
+            MoveEval eval = minimax(depth-1, alpha, beta, false, ai, player);
+            undo_();
+
+            if (eval.score > best.score) {
+                best.score = eval.score;
+                best.bestMove = move;   // store the move
+            }
+            alpha = std::max(alpha, best.score);
+            if (beta <= alpha) break;  // prune
+        }
+        return best;
+    } else {
+        MoveEval best = { +INF, Coord{-1, -1} };
+        for (auto move : board_.top().generateMoves()) {
+            play_(move, player, ai);
+            MoveEval eval = minimax(depth-1, alpha, beta, true, ai, player);
+            undo_();
+
+            if (eval.score < best.score) {
+                best.score = eval.score;
+                best.bestMove = move;
+            }
+            beta = std::min(beta, best.score);
+            if (beta <= alpha) break;  // prune
+        }
+        return best;
+    }
+}
+
+
+Coord   Gomoku::playAiTurn_(Player const & player, Player const & opponent) {
+    Board board = getBoard();
+    std::cout << "DOES WAIT " << mode_ << std::endl;
     if (mode_ == "demo") {
         server_.waitDemoFront();
     }
-    for (int y = 0; y <  board_.getSize(); ++y)
-        for (int x = 0; x < board_.getSize(); ++x)
-            if (board_.getCell({x, y}) == Cell::Empty) {
-                std::cout << x << " " << y << std::endl;
-                return Coord{x, y};
-            }
-    return Coord{-1, -1};
+    Coord ret = minimax(4, NEG_INF, INF, true, player, opponent).bestMove;
+    std::cout << "x:" << ret.x << ",y: " << ret.y << std::endl;
+    return ret;
 }
 
 bool    Gomoku::playTurn_(Player &player, Player &opponent) {
     Coord coord;
+    Board board = Board(getBoard());
 
     if (player.isHuman()) {
         coord = playHumanTurn_();
     }
     else {
-        coord = playAiTurn_();
+        coord = playAiTurn_(player, opponent);
     }
 
     int x = coord.x, y = coord.y;
-    board_.setBoard(player.getColor(), {x, y});
-    board_.capture(player, opponent, {x, y});
-    bool win = board_.checkWin(player, {x, y});
+    board.setBoard(player.getColor(), {x, y});
+    board.capture(player, opponent, {x, y});
+    bool win = board.checkWin(player, {x, y});
 
-    server_.send_response(board_, win, true);
+    board_.push(board);
+    server_.send_response(board, win, true);
 
     return win;
 }
 
+
+void    Gomoku::play_(Coord coord, Player const & player,  Player const & opponent) {
+    Board newBoard = board_.top();
+    int x = coord.x, y = coord.y;
+
+    newBoard.setBoard(player.getColor(), {x, y});
+    newBoard.capture(player, opponent, {x, y});
+    board_.push(newBoard);
+}
+
+void    Gomoku::undo_() {
+    board_.pop();
+}

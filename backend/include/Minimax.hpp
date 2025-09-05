@@ -39,8 +39,6 @@ private:
 
     int     capture_threat[BOARD_SIZE][BOARD_SIZE]; // (in 1)
 
-    //int     capturable[BOARD_SIZE][BOARD_SIZE]; // (in 1)
-
     int     figures[BOARD_SIZE][BOARD_SIZE]; // 1 open threes max and fours
 
     // 5) Take past player action into account to identify patterns of capture and weigh board accordingly
@@ -67,11 +65,6 @@ private:
     //      4 with 1 capture threat     40,000
     //      5                           10,000,000
     int     capture_left_to_win;
-    //int     capture_left_to_loose;
-
-
-
-    int     threatsToWin;
 
     // Search strategy
     // Fours and captures > threes > twos
