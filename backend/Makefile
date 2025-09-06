@@ -6,7 +6,7 @@
 #    By: jlanza <jlanza@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/16 12:05:27 by jlanza            #+#    #+#              #
-#    Updated: 2025/09/05 05:05:40 by jlanza           ###   ########.fr        #
+#    Updated: 2025/09/06 03:50:39 by jlanza           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -54,7 +54,7 @@ RM = rm -rf
 #                               BUILD RULES                                    #
 # **************************************************************************** #
 
-all: $(TEST_BIN) $(NAME)
+all: $(NAME)
 
 $(BUILD_DIR)%.o: $(SOURCES_DIR)%.cpp
 	@mkdir -p $(dir $@)
@@ -109,7 +109,8 @@ tests: $(TEST_BIN)
 # 	./run_tests --gtest_filter=
 
 run: all
-	./$(NAME)
+	./$(NAME) &
+	cd ../frontend && python3 front.py
 
 # **************************************************************************** #
 #                               CLEAN RULES                                    #

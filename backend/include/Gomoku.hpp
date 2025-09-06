@@ -7,7 +7,7 @@
 # include "Player.hpp"
 # include "Server.hpp"
 
-struct MoveEval { int score; Coord bestMove;};
+struct MoveEval { long long score; Coord bestMove;};
 
 class Gomoku
 {
@@ -35,7 +35,7 @@ class Gomoku
 
         // Functions
         void            play(void);
-        MoveEval        minimax(int depth, int alpha, int beta, bool maximizing, Player const & player, Player const & opponent);
+        MoveEval        minimax(int depth, long long alpha, long long beta, bool maximizing, Player const & player, Player const & opponent, Coord lastMove);
 };
 
 // operator <<

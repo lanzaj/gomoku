@@ -44,7 +44,6 @@ class GomokuGUI:
             self.canvas.bind("<Leave>", self.clear_hover)
         else:
             while 1:
-                print('demo')
                 self.send({'waiting':True})
                 self.root.after(10, lambda: self.center_window(root))
                 response = self.receive()
@@ -55,7 +54,7 @@ class GomokuGUI:
                     time.sleep(2)
                     exit(0)
 
-    ############## Window  ##############
+    ############## Window ##############
 
     def bar(self, root):
         # Barre de titre custom

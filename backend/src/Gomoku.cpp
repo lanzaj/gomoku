@@ -42,9 +42,6 @@ void    Gomoku::play(void) {
         if (playTurn_(p_white_, p_black_))
             break;
     }
-    // while (!(playTurn_(p_black_, p_white_)
-    //     || playTurn_(p_white_, p_black_))) {
-    // }
 }
 
 Coord   Gomoku::playHumanTurn_() {
@@ -65,20 +62,20 @@ Coord   Gomoku::playHumanTurn_() {
     return coord;
 }
 
-MoveEval Gomoku::minimax(int depth, int alpha, int beta, bool maximizing, 
-                 Player const & ai, Player const & player) {
-    if (depth == 0 || board_.top().isGameOver()) {
+MoveEval Gomoku::minimax(int depth, long long alpha, long long beta, bool maximizing, 
+                 Player const & ai, Player const & opponent, Coord lastMove) {
+    if (depth == 0 || board_.top().isGameOver(ai, opponent)) {
         if (maximizing)
-            return { board_.top().evaluate(ai, player), Coord{-1,-1} };
+            return { board_.top().evaluate(ai, opponent, lastMove), lastMove };
         else
-            return { board_.top().evaluate(player, ai), Coord{-1,-1} };
+            return { board_.top().evaluate(opponent, ai, lastMove), lastMove };
     }
 
     if (maximizing) {
         MoveEval best = { -INF, Coord{-1, -1} };
-        for (auto move : board_.top().generateMoves()) {
-            play_(move, ai, player);
-            MoveEval eval = minimax(depth-1, alpha, beta, false, ai, player);
+        for (auto move : board_.top().generateMoves(depth)) {
+            play_(move, ai, opponent);
+            MoveEval eval = minimax(depth-1, alpha, beta, false, ai, opponent, move);
             undo_();
 
             if (eval.score > best.score) {
@@ -91,9 +88,9 @@ MoveEval Gomoku::minimax(int depth, int alpha, int beta, bool maximizing,
         return best;
     } else {
         MoveEval best = { +INF, Coord{-1, -1} };
-        for (auto move : board_.top().generateMoves()) {
-            play_(move, player, ai);
-            MoveEval eval = minimax(depth-1, alpha, beta, true, ai, player);
+        for (auto move : board_.top().generateMoves(depth)) {
+            play_(move, opponent, ai);
+            MoveEval eval = minimax(depth-1, alpha, beta, true, ai, opponent, move);
             undo_();
 
             if (eval.score < best.score) {
@@ -110,12 +107,14 @@ MoveEval Gomoku::minimax(int depth, int alpha, int beta, bool maximizing,
 
 Coord   Gomoku::playAiTurn_(Player const & player, Player const & opponent) {
     Board board = getBoard();
-    std::cout << "DOES WAIT " << mode_ << std::endl;
     if (mode_ == "demo") {
         server_.waitDemoFront();
     }
-    Coord ret = minimax(4, NEG_INF, INF, true, player, opponent).bestMove;
-    std::cout << "x:" << ret.x << ",y: " << ret.y << std::endl;
+    MoveEval move = minimax(8, -INF, INF, true, player, opponent, {-1, -1});
+    Coord ret = move.bestMove;
+    std::cout << "x:" << ret.x << ", y: " << ret.y << ", score: " << move.score << std::endl;
+    if (ret.x == -1)
+        return {9, 9};
     return ret;
 }
 

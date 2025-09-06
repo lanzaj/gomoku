@@ -6,12 +6,12 @@
 #    By: jlanza <jlanza@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/08/31 12:11:01 by jlanza            #+#    #+#              #
-#    Updated: 2025/09/04 00:25:41 by jlanza           ###   ########.fr        #
+#    Updated: 2025/09/06 03:50:49 by jlanza           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 all:
-	(cd backend && make run &) && (cd frontend && python3 front.py)
+	cd backend && make run
 
 clean:
 	cd backend && make clean

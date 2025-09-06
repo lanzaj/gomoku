@@ -38,7 +38,7 @@ Cell  Board::reverse(Cell const & c) const {
 void Board::setBoard(Cell color, Coord coord) {
     board_[coord.y][coord.x] = color;
     updateAlignment_(coord);
-    updateHeatMap_(coord);
+    updateCapturable_(coord);
     // std::cout << *this;
 }
 
@@ -132,6 +132,55 @@ bool    Board::checkInBound(int a, int b) const {
     return ((a >= 0 && a < size_) && (b >= 0 && b < size_));
 }
 
+bool Board::isCapturable(int x, int y, Cell const & color) const {
+    Cell me = (color == Cell::Black) ? Cell::Black : Cell::White;
+    Cell opp = (color == Cell::Black) ? Cell::White : Cell::Black;
+
+    // Directions: horizontal, vertical, both diagonals
+    static const int directions[8][2] = {
+        {1, 0}, {-1, 0},   // horizontal
+        {0, 1}, {0, -1},   // vertical
+        {1, 1}, {-1, -1},  // diagonal ↘ ↖
+        {1, -1}, {-1, 1}   // diagonal ↗ ↙
+    };
+
+    for (auto &d : directions) {
+        int dx = d[0], dy = d[1];
+
+        // --- Check forward pattern: O X X _
+        int x1 = x - dx,     y1 = y - dy;     // opponent stone
+        int x2 = x,          y2 = y;         // first player stone
+        int x3 = x + dx,     y3 = y + dy;    // second player stone
+        int x4 = x + 2*dx,   y4 = y + 2*dy;  // empty cell
+
+        if (checkInBound(x1, y1) && checkInBound(x2, y2) && checkInBound(x3, y3) && checkInBound(x4, y4)) {
+            if (board_[y1][x1] == opp &&
+                board_[y2][x2] == me &&
+                board_[y3][x3] == me &&
+                board_[y4][x4] == Cell::Empty) {
+                return true;
+            }
+        }
+
+        // --- Check backward pattern: _ X X O
+        x1 = x - 2*dx; y1 = y - 2*dy; // empty cell
+        x2 = x - dx;   y2 = y - dy;   // first player stone
+        x3 = x;        y3 = y;        // second player stone
+        x4 = x + dx;   y4 = y + dy;   // opponent stone
+
+        if (checkInBound(x1, y1) && checkInBound(x2, y2) && checkInBound(x3, y3) && checkInBound(x4, y4)) {
+            if (board_[y1][x1] == Cell::Empty &&
+                board_[y2][x2] == me &&
+                board_[y3][x3] == me &&
+                board_[y4][x4] == opp) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 bool    Board::checkWinDirection_(Player const & player, Coord coord, Direction dir) const {
     int x0 = coord.x, y0 = coord.y, dx = dir.dx, dy = dir.dy;
     const Cell c = player.getColor();
@@ -139,20 +188,19 @@ bool    Board::checkWinDirection_(Player const & player, Coord coord, Direction 
 
     int x = x0 + dx;
     int y = y0 + dy;
-    while (checkInBound(x, y) && c == board_[y][x]) {
+    while (checkInBound(x, y) && c == board_[y][x] && !isCapturable(x, y, player.getColor())) {
         ++power;
         x += dx;
         y += dy;
     }
     x = x0 - dx;
     y = y0 - dy;
-    while (checkInBound(x, y) && c == board_[y][x]) {
+    while (checkInBound(x, y) && c == board_[y][x] && !isCapturable(x, y, player.getColor())) { 
         ++power;
         x -= dx;
         y -= dy;
     }
     if (power >= 5) {
-        std::cout << "WIN!" << std::endl;
         return true;
     }
     return false;
@@ -178,7 +226,11 @@ void    Board::captureDirection_(Player const & player, Player const & opponent,
     }
     if (i == 4) {
         setBoard(Cell::Empty, {x0 + dx, y0 + dy});
+        black_.captureThreat[y0 + dy][x0 + dx] = 0;
+        white_.captureThreat[y0 + dy][x0 + dx] = 0;
         setBoard(Cell::Empty, {x0 + 2 * dx, y0 + 2 * dy});
+        black_.captureThreat[y0 + 2 * dy][x0 + 2 * dx] = 0;
+        white_.captureThreat[y0 + 2 * dy][x0 + 2 * dx] = 0;
         incrementCapture_(player);
     }
 }
@@ -288,20 +340,38 @@ void    Board::updateAlignment_(Coord coord) {
     // std::cout << *this;
 }
 
-void    Board::updateHeatMap_(Coord coord) {
-    heatMap_[coord.y][coord.x] = 4;
-    for (int i = 3; i > 0; --i) {
-        for (auto dir : DIRECTIONS) {
-            int new_x = coord.x + dir.dx * i;
-            int new_y = coord.y + dir.dy * i;
-            if (checkInBound(new_x, new_y))
-                heatMap_[new_y][new_x] = std::max(heatMap_[new_y][new_x], 4 - i);
+
+void        Board::updateCapturableDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir) {
+    int x = coord.x + dir.dx, y = coord.y + dir.dy;
+    if (checkInBound(x, y)) {
+        if (isCapturable(x, y, color))
+            alignment[y][x] = 1;
+    }
+}
+
+void        Board::updateCapturable_(Coord coord) {
+    for (const auto& dir : DIRECTIONS) {
+        for (int i = 0; i < 4; ++i) {
+            updateCapturableDirection_(Cell::Black, black_.captureThreat, coord, {dir.dx * i, dir.dy * i});
+            updateCapturableDirection_(Cell::White, white_.captureThreat, coord, {dir.dx * i, dir.dy * i});
         }
     }
 }
 
-int Board::evaluateAlignments_(PlayerState const & state) {
-    int score = 0;
+void    Board::updateHeatMap_(Coord coord) {
+    heatMap_[coord.y][coord.x] = 3;
+    for (int i = 2; i > 0; --i) {
+        for (auto dir : DIRECTIONS) {
+            int new_x = coord.x + dir.dx * i;
+            int new_y = coord.y + dir.dy * i;
+            if (checkInBound(new_x, new_y))
+                heatMap_[new_y][new_x] = std::max(heatMap_[new_y][new_x], 3 - i);
+        }
+    }
+}
+
+long long Board::evaluateAlignments_(PlayerState const & state) {
+    long long score = 0;
     for (int y = 0; y < size_; ++y) {
         for (int x = 0; x < size_; ++x) {
             score += state.right[y][x];
@@ -321,39 +391,81 @@ int Board::evaluateAlignments_(PlayerState const & state) {
 ///////////////////MINIMAX///////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////
 
-int Board::evaluate(Player const & player, Player const & opponent) {
-    int score = 0;
+long long Board::evaluate(Player const & player, Player const & opponent, Coord lastMove) {
+    long long score = 0;
     PlayerState player_state = getPlayerState_(player);
     PlayerState opponent_state = getPlayerState_(opponent);
 
     // 1. Win / Lose conditions
-    if (player_state.captured >= 5) return +INF;  // Capture win rule
-    if (opponent_state.captured >= 5) return -INF;
+    if (player_state.captured >= 5) return WIN;  // Capture win rule
+    if (opponent_state.captured >= 5) return LOOSE;
+
+
+    if (checkWin(player, lastMove))
+        return WIN;
+    if (checkWin(opponent, lastMove))
+        return LOOSE;
 
     // 2. Alignment scores
     score += evaluateAlignments_(player_state);
-    score -= evaluateAlignments_(opponent_state) * 2;  // Penalize opponent (stronger weight)
+    score -= evaluateAlignments_(opponent_state) * DEFENSE_MODIFIER;
 
     // 3. Capture scores
     score += capture_score[player_state.captured];
     score -= capture_score[opponent_state.captured];
 
-    return -score;
+    return score;
 }
 
-bool                Board::isGameOver() {
+bool    Board::isGameOver(Player const & player, Player const & opponent) {
+    if (white_.captured >= 5 || black_.captured >= 5)
+        return true;
+    for (int y = 0; y < size_; ++y) {
+        for (int x = 0; x < size_; ++x) {
+            if (checkWin(player, {x, y}) || checkWin(opponent, {x, y}))
+                return true;
+        }
+    }
     return false;
 }
 
-std::vector<Coord>  Board::generateMoves() {
-    std::vector<Coord> ret;
 
+std::vector<Coord>  Board::generateMoves(int depth) {
+    std::vector<CoordValue> coords;
+    memset(heatMap_, 0, sizeof(heatMap_));
     for (int y = 0; y < size_; ++y) {
         for (int x = 0; x < size_; ++x) {
-            if (heatMap_[y][x] > 0 && heatMap_[y][x] != 4) {
-                ret.push_back({x, y});
+            if (board_[y][x] != Cell::Empty)
+                updateHeatMap_({x, y});
+        }
+    }
+
+    // Compute total score for each cell
+    for (int y = 0; y < size_; ++y) {
+        for (int x = 0; x < size_; ++x) {
+            long long total = black_.right[y][x] + black_.left[y][x] + black_.up[y][x] + black_.down[y][x] +
+                        black_.upRight[y][x] + black_.downLeft[y][x] + black_.upLeft[y][x] + black_.downRight[y][x] +
+                        white_.right[y][x] + white_.left[y][x] + white_.up[y][x] + white_.down[y][x] +
+                        white_.upRight[y][x] + white_.downLeft[y][x] + white_.upLeft[y][x] + white_.downRight[y][x];
+            if (total > 0) { // only consider non-zero cells
+                coords.push_back({x, y, total});
             }
         }
     }
-    return ret;
+
+    // Sort by total descending
+    std::sort(coords.begin(), coords.end(), [](const CoordValue &a, const CoordValue &b) {
+        return a.value > b.value;
+    });
+
+    std::vector<Coord> moves;
+    moves.reserve(coords.size());
+    int count = 0;
+    int limit = beam_search[std::min(depth, 9)];
+    for (auto &c : coords) {
+        if (count >= limit) break; 
+        moves.push_back({c.x, c.y});
+        ++count;
+    }
+    return moves;
 }

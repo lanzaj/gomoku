@@ -6,13 +6,17 @@
 # include "Player.hpp"
 # include "Cell.hpp"
 # include <climits>
+# include <cstring>
 # include <vector>
+# include <algorithm>
 
 constexpr int INF = INT_MAX;
-constexpr int NEG_INF = INT_MIN;
+constexpr int WIN = INT_MAX - 1;
+constexpr int LOOSE = -INT_MAX + 1;
 constexpr int BOARD_SIZE = 19;
 
 struct Coord { int x; int y; };
+struct CoordValue { int x, y; long long value; };
 struct Direction { int dx; int dy; };
 
 struct PlayerState {
@@ -48,13 +52,16 @@ class Board
 
         int         heatMap_[BOARD_SIZE][BOARD_SIZE]{}; // 0=ignore, >0=near activity
 
+        bool        isCapturable(int x, int y, Cell const & color) const;
         bool        checkWinDirection_(Player const & player, Coord coord, Direction dir) const;
         void        captureDirection_(Player const & player, Player const & opponent, Coord coord, Direction dir);
         void        closeAlignmentDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
         void        updateAlignmentDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
         void        updateAlignment_(Coord coord);
+        void        updateCapturableDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
+        void        updateCapturable_(Coord coord);
         void        updateHeatMap_(Coord coord);
-        int         evaluateAlignments_(PlayerState const & state);
+        long long   evaluateAlignments_(PlayerState const & state);
 
         // Getter
         int                 getCapture_(Player const & player) const;
@@ -82,10 +89,14 @@ class Board
         };
 
         // Scores depending of the length of the alinment
-        static constexpr int open_score[6] = {0, 0, 20, 600, 33600, 3024000};
-        static constexpr int closed_score[6] = {0, 0, 5, 100, 4200, 3024000};
+        static constexpr int   open_score[6] = {0, 2, 20, 600, 30000, 3024000};
+        static constexpr int closed_score[6] = {0, 1, 10,  200,  10000, 1024000};
 
-        static constexpr int capture_score[6] = {0, 50, 200, 1000, 6000, INF};
+        static constexpr int capture_score[6] = {0, 50, 200, 1000, 6000, WIN};
+
+        static constexpr int beam_search[10] = {50, 20, 10, 5, 5, 3, 3, 3, 3, 3};
+
+        static constexpr int DEFENSE_MODIFIER = 2;
 
         Board(); 
         ~Board() = default;
@@ -108,9 +119,9 @@ class Board
         bool    checkWin(Player const & player, Coord coord) const;
         void    capture(Player const & player, Player const & opponent, Coord coord);
         
-        int                 evaluate(Player const & player, Player const & opponent);
-        bool                isGameOver();
-        std::vector<Coord>  generateMoves();
+        long long           evaluate(Player const & player, Player const & opponent, Coord LastMove);
+        bool                isGameOver(Player const & player, Player const & opponent);
+        std::vector<Coord>  generateMoves(int depth);
 };
 
 std::ostream & operator<<(std::ostream & os, Board const & instance);
