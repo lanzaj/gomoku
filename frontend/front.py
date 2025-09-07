@@ -51,7 +51,7 @@ class GomokuGUI:
                 self.root.update_idletasks()
                 time.sleep(0.05)
                 if response.get('win'):
-                    time.sleep(2)
+                    time.sleep(10)
                     exit(0)
 
     ############## Window ##############
@@ -145,6 +145,8 @@ class GomokuGUI:
             self.canvas.create_line(pos, CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2)
 
     def redraw(self, response):
+        if response is None:
+            return
         self.canvas.delete("all")
         self.draw_board()
         for stone in response["game_state"]:
@@ -224,7 +226,8 @@ class GomokuGUI:
 
     def handle_move(self, response):
         self.redraw(response)
-
+        if response is None:
+            return
         if response.get("win"):
             self.exit = True
             self.display_winner()

@@ -28,10 +28,10 @@ class Server
         ~Server();
 
         // Functions
-        std::string init_mode();
-        Coord       getCoord();
-        void   waitDemoFront();
-        void        send_response(Board const & board, bool win, bool authorized);
+        json    init_mode();
+        Coord   getCoord();
+        void    waitDemoFront();
+        void    send_response(Board const & board, bool win, bool authorized);
 
         // Exception
         class ProtocolError : public std::runtime_error {

@@ -37,12 +37,15 @@ struct PlayerState {
     int downRight[BOARD_SIZE][BOARD_SIZE]{};
 
     // Capture evaluation
-    int captureThreat[BOARD_SIZE][BOARD_SIZE]{};   // Stones this player can capture
+    int capturable[BOARD_SIZE][BOARD_SIZE]{};   // Stones this player can capture
     int captured{};                                // Stones captured by this player
 
     // Pattern evaluation
     int figures[BOARD_SIZE][BOARD_SIZE]{};         // e.g., open threes/fours
-    bool closed5 = false;
+    bool closed5{};
+    Coord closed5Coord[5] = {
+        {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}
+    };
 };
 
 class Board
@@ -57,8 +60,8 @@ class Board
 
         int         heatMap_[BOARD_SIZE][BOARD_SIZE]{}; // 0=ignore, >0=near activity
 
-        bool        isForbiddenDoubleThree(Coord coord, Player const & player) const;
         bool        isCapturable(int x, int y, Cell const & color) const;
+        std::vector<Coord> getCapturingMoves(const std::vector<Coord>& targets, Cell color) const;
         bool        checkWinDirection_(Player const & player, Coord coord, Direction dir) const;
         void        captureDirection_(Player const & player, Player const & opponent, Coord coord, Direction dir);
         void        closeAlignmentDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
@@ -67,7 +70,7 @@ class Board
         void        updateCapturableDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
         void        updateCapturable_(Coord coord);
         void        updateHeatMap_(Coord coord);
-        long long   evaluateAlignments_(PlayerState const & state);
+        long long   evaluateAlignments_(PlayerState const & state, PlayerState const & opp_state);
 
         // Getter
         int                 getCapture_(Player const & player) const;
@@ -93,12 +96,13 @@ class Board
         };
 
         // Scores depending of the length of the alinment
-        static constexpr int   open_score[6] = {0, 2, 20, 600, 30000, 3024000};
+        static constexpr int   open_score[6] = {0, 2, 20, 600, 30000,   3024000};
         static constexpr int closed_score[6] = {0, 1, 10,  200,  10000, 1024000};
 
         static constexpr int capture_score[6] = {0, 200, 1000, 5000, 40000, 5024000};
+        static constexpr int capture_threat[6] = {5, 50, 200, 1000, 40000,  5024000};
 
-        static constexpr int beam_search[10] = {50, 20, 10, 10, 10, 3, 3, 3, 3, 3};
+        static constexpr int beam_search[10] = {40, 20, 10, 5, 5, 3, 3, 3, 3, 3};
 
         static constexpr int DEFENSE_MODIFIER = 2;
 
@@ -114,6 +118,7 @@ class Board
         int         getSize() const;
         Cell        reverse(Cell const & c) const;
 
+
         PlayerState         &getPlayerState_(Cell const & corlor);
         PlayerState         &getPlayerState_(Player const & player);
         const PlayerState   &getPlayerState_(Player const & player) const;
@@ -122,6 +127,7 @@ class Board
         void    setBoard(Cell color, Coord coord);
 
         // Functions
+        bool    isForbiddenDoubleThree(Coord coord, Player const & player) const;
         bool    checkInBound(int n) const;
         bool    checkInBound(int a, int b) const;
         bool    checkWin(Player const & player, Coord coord) const;
@@ -129,8 +135,16 @@ class Board
         
         long long           evaluate(Player const & player, Player const & opponent, Coord LastMove);
         bool                isGameOver(Player const & player, Player const & opponent, Coord last);
-        std::vector<Coord>  generateMoves(int depth, Player const & player);
-};
+        std::vector<Coord>  generateMoves(int depth, Player const & player, Player const & opponent);
+
+
+        // Exception
+        class AiException : public std::runtime_error {
+            public:
+                explicit AiException(const std::string& msg)
+                    : std::runtime_error("Ai error: " + msg) {}
+        };
+    };
 
 std::ostream & operator<<(std::ostream & os, Board const & instance);
 std::ostream & operator<<(std::ostream & os, PlayerState const & instance);

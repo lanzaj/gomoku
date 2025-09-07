@@ -107,13 +107,9 @@ void    Server::send_response(Board const & board, bool win, bool authorized) {
         throw ProtocolError("Failed to send response");
 }
 
-std::string     Server::init_mode() {
+json     Server::init_mode() {
     json data = recv_json_();
-
-    if (data.contains("mode"))
-        return (data["mode"]);
-    else
-        throw Server::ProtocolError("Missing 'mode' field in client message");
+    return data;
 }
 
 Coord   Server::getCoord() {
