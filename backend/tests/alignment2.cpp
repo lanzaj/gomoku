@@ -196,7 +196,7 @@ TEST(CheckAlignment2s, NotEnoughSpaceHardAfterCheckNonDestruction) {
     EXPECT_EQ(BoardTestHelper::getBlack(board).right[1][10], 0);
     EXPECT_EQ(BoardTestHelper::getBlack(board).right[1][11],  0);
     EXPECT_EQ(BoardTestHelper::getBlack(board).right[1][12], 0);
-    EXPECT_EQ(BoardTestHelper::getBlack(board).right[1][5], 5);
+    EXPECT_EQ(BoardTestHelper::getBlack(board).right[1][5], 10);
     EXPECT_EQ(BoardTestHelper::getBlack(board).left[1][9], 0);
     EXPECT_EQ(BoardTestHelper::getBlack(board).left[1][10], 0);
     EXPECT_EQ(BoardTestHelper::getBlack(board).left[1][11],  0);

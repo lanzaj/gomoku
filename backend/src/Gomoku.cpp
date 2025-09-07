@@ -64,16 +64,13 @@ Coord   Gomoku::playHumanTurn_() {
 
 MoveEval Gomoku::minimax(int depth, long long alpha, long long beta, bool maximizing, 
                  Player const & ai, Player const & opponent, Coord lastMove) {
-    if (depth == 0 || board_.top().isGameOver(ai, opponent)) {
-        if (maximizing)
-            return { board_.top().evaluate(ai, opponent, lastMove), lastMove };
-        else
-            return { board_.top().evaluate(opponent, ai, lastMove), lastMove };
+    if (depth == 0 || board_.top().isGameOver(ai, opponent, lastMove)) {
+        return { board_.top().evaluate(ai, opponent, lastMove), lastMove };
     }
 
     if (maximizing) {
         MoveEval best = { -INF, Coord{-1, -1} };
-        for (auto move : board_.top().generateMoves(depth)) {
+        for (auto move : board_.top().generateMoves(depth, ai)) {
             play_(move, ai, opponent);
             MoveEval eval = minimax(depth-1, alpha, beta, false, ai, opponent, move);
             undo_();
@@ -88,7 +85,7 @@ MoveEval Gomoku::minimax(int depth, long long alpha, long long beta, bool maximi
         return best;
     } else {
         MoveEval best = { +INF, Coord{-1, -1} };
-        for (auto move : board_.top().generateMoves(depth)) {
+        for (auto move : board_.top().generateMoves(depth, opponent)) {
             play_(move, opponent, ai);
             MoveEval eval = minimax(depth-1, alpha, beta, true, ai, opponent, move);
             undo_();
@@ -112,9 +109,18 @@ Coord   Gomoku::playAiTurn_(Player const & player, Player const & opponent) {
     }
     MoveEval move = minimax(8, -INF, INF, true, player, opponent, {-1, -1});
     Coord ret = move.bestMove;
-    std::cout << "x:" << ret.x << ", y: " << ret.y << ", score: " << move.score << std::endl;
+
+    std::cout << "x:" << ret.x 
+        << ", y: " << ret.y 
+        << ", score: " << move.score
+        << ", white capture: " << board_.top().getPlayerState_(Cell::White).captured 
+        << ", black capture: " << board_.top().getPlayerState_(Cell::Black).captured 
+        << ", white 5s: " << board_.top().getPlayerState_(Cell::White).closed5 
+        << ", black 5s: " << board_.top().getPlayerState_(Cell::Black).closed5 
+        << std::endl;
+
     if (ret.x == -1)
-        return {9, 9};
+        throw AiException("Move not found");
     return ret;
 }
 
@@ -133,6 +139,15 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
     board.setBoard(player.getColor(), {x, y});
     board.capture(player, opponent, {x, y});
     bool win = board.checkWin(player, {x, y});
+
+    std::cout << "x:" << coord.x 
+        << ", y: " << coord.y 
+        << ", score: " << board.evaluate(player, opponent, coord)
+        << ", white capture: " << board_.top().getPlayerState_(Cell::White).captured 
+        << ", black capture: " << board_.top().getPlayerState_(Cell::Black).captured 
+        << ", white 5s: " << board_.top().getPlayerState_(Cell::White).closed5 
+        << ", black 5s: " << board_.top().getPlayerState_(Cell::Black).closed5 
+        << std::endl;
 
     board_.push(board);
     server_.send_response(board, win, true);

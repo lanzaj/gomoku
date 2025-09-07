@@ -110,6 +110,10 @@ int Board::getCapture_(Player const & player) const {
     return getPlayerState_(player).captured;
 }
 
+PlayerState& Board::getPlayerState_(Cell const & color) {
+    return (color == Cell::Black) ? black_ : white_;
+}
+
 PlayerState& Board::getPlayerState_(const Player& player) {
     return (player.getColor() == Cell::Black) ? black_ : white_;
 }
@@ -207,6 +211,8 @@ bool    Board::checkWinDirection_(Player const & player, Coord coord, Direction 
 }
 
 bool    Board::checkWin(Player const & player, Coord coord) const {
+    if (player.getColor() != board_[coord.y][coord.x])
+        return false;
     return (checkWinDirection_(player, coord, RIGHT)
         || checkWinDirection_(player, coord, UP)
         || checkWinDirection_(player, coord, DOWN_RIGHT)
@@ -311,6 +317,8 @@ void Board::updateAlignmentDirection_(Cell const & color, int (&alignment)[BOARD
     }
     else if (!start_closed) {
         alignment[y0][x0] = closed_score[i];
+    } else if (i >= 5) {
+        getPlayerState_(color).closed5 = true;
     }
 
     // check free space is at least 5
@@ -410,6 +418,10 @@ long long Board::evaluate(Player const & player, Player const & opponent, Coord 
     score += evaluateAlignments_(player_state);
     score -= evaluateAlignments_(opponent_state) * DEFENSE_MODIFIER;
 
+    // 2.bis Closed 5
+    score += player_state.closed5 * closed_score[5];
+    score -= opponent_state.closed5 * closed_score[5] * DEFENSE_MODIFIER;
+
     // 3. Capture scores
     score += capture_score[player_state.captured];
     score -= capture_score[opponent_state.captured];
@@ -417,20 +429,44 @@ long long Board::evaluate(Player const & player, Player const & opponent, Coord 
     return score;
 }
 
-bool    Board::isGameOver(Player const & player, Player const & opponent) {
+bool    Board::isGameOver(Player const & player, Player const & opponent, Coord last) {
     if (white_.captured >= 5 || black_.captured >= 5)
         return true;
-    for (int y = 0; y < size_; ++y) {
-        for (int x = 0; x < size_; ++x) {
-            if (checkWin(player, {x, y}) || checkWin(opponent, {x, y}))
+    if (checkWin(player, last) || checkWin(opponent, last))
+        return true;
+    return false;
+}
+
+
+bool    Board::isForbiddenDoubleThree(Coord coord, Player const & player) const {
+    PlayerState state = getPlayerState_(player);
+
+    int n_double_three = 0;
+
+    std::vector<DirMapping> dirMappings = {
+        {state.right, RIGHT},
+        {state.left, LEFT},
+        {state.up, UP},
+        {state.down, DOWN},
+        {state.upRight, UP_RIGHT},
+        {state.upLeft, UP_LEFT},
+        {state.downRight, DOWN_RIGHT},
+        {state.downLeft, DOWN_LEFT},
+    };
+
+    for (auto &dm : dirMappings) {
+        if ((dm.state[coord.y][coord.x] == open_score[2] && board_[coord.y - dm.dir.dy][coord.x - dm.dir.dx] == Cell::Empty)
+            || dm.state[coord.y + dm.dir.dy][coord.x + dm.dir.dx] == open_score[2]) {
+            n_double_three += 1;
+            if (n_double_three >= 2) {
                 return true;
+            }
         }
     }
     return false;
 }
 
-
-std::vector<Coord>  Board::generateMoves(int depth) {
+std::vector<Coord>  Board::generateMoves(int depth, Player const & player) {
     std::vector<CoordValue> coords;
     memset(heatMap_, 0, sizeof(heatMap_));
     for (int y = 0; y < size_; ++y) {
@@ -447,9 +483,16 @@ std::vector<Coord>  Board::generateMoves(int depth) {
                         black_.upRight[y][x] + black_.downLeft[y][x] + black_.upLeft[y][x] + black_.downRight[y][x] +
                         white_.right[y][x] + white_.left[y][x] + white_.up[y][x] + white_.down[y][x] +
                         white_.upRight[y][x] + white_.downLeft[y][x] + white_.upLeft[y][x] + white_.downRight[y][x];
-            if (total > 0) { // only consider non-zero cells
+            
+            if (total > 0 && !isForbiddenDoubleThree({x, y}, player)) {
                 coords.push_back({x, y, total});
             }
+            board_[y][x] = player.getColor();
+            // if (checkWin(player, {x, y})) {
+            //     board_[y][x] = Cell::Empty;
+            //     return std::vector<Coord>{ {x, y} };
+            // }
+            board_[y][x] = Cell::Empty;
         }
     }
 

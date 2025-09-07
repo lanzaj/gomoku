@@ -4,6 +4,7 @@
 TEST(HeatMap, HeatMap) {
     Board board;
     board.setBoard(Cell::Black, {10, 10});
+    BoardTestHelper::updateHeatMap_(board, {10, 10});
     EXPECT_EQ(BoardTestHelper::getHeatMap(board)[10][10], 3);
     EXPECT_EQ(BoardTestHelper::getHeatMap(board)[11][11], 2);
     EXPECT_EQ(BoardTestHelper::getHeatMap(board)[12][12], 1);

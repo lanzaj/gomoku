@@ -18,6 +18,10 @@ constexpr int BOARD_SIZE = 19;
 struct Coord { int x; int y; };
 struct CoordValue { int x, y; long long value; };
 struct Direction { int dx; int dy; };
+struct DirMapping {
+    int (*state)[BOARD_SIZE];
+    Direction dir;
+};
 
 struct PlayerState {
     Cell    color;
@@ -38,6 +42,7 @@ struct PlayerState {
 
     // Pattern evaluation
     int figures[BOARD_SIZE][BOARD_SIZE]{};         // e.g., open threes/fours
+    bool closed5 = false;
 };
 
 class Board
@@ -52,6 +57,7 @@ class Board
 
         int         heatMap_[BOARD_SIZE][BOARD_SIZE]{}; // 0=ignore, >0=near activity
 
+        bool        isForbiddenDoubleThree(Coord coord, Player const & player) const;
         bool        isCapturable(int x, int y, Cell const & color) const;
         bool        checkWinDirection_(Player const & player, Coord coord, Direction dir) const;
         void        captureDirection_(Player const & player, Player const & opponent, Coord coord, Direction dir);
@@ -65,8 +71,6 @@ class Board
 
         // Getter
         int                 getCapture_(Player const & player) const;
-        PlayerState         &getPlayerState_(Player const & player);
-        const PlayerState   &getPlayerState_(Player const & player) const; // const overload
         
         // Setter
         void        incrementCapture_(Player const & player);
@@ -92,9 +96,9 @@ class Board
         static constexpr int   open_score[6] = {0, 2, 20, 600, 30000, 3024000};
         static constexpr int closed_score[6] = {0, 1, 10,  200,  10000, 1024000};
 
-        static constexpr int capture_score[6] = {0, 50, 200, 1000, 6000, WIN};
+        static constexpr int capture_score[6] = {0, 200, 1000, 5000, 40000, 5024000};
 
-        static constexpr int beam_search[10] = {50, 20, 10, 5, 5, 3, 3, 3, 3, 3};
+        static constexpr int beam_search[10] = {50, 20, 10, 10, 10, 3, 3, 3, 3, 3};
 
         static constexpr int DEFENSE_MODIFIER = 2;
 
@@ -110,6 +114,10 @@ class Board
         int         getSize() const;
         Cell        reverse(Cell const & c) const;
 
+        PlayerState         &getPlayerState_(Cell const & corlor);
+        PlayerState         &getPlayerState_(Player const & player);
+        const PlayerState   &getPlayerState_(Player const & player) const;
+
         // Setter
         void    setBoard(Cell color, Coord coord);
 
@@ -120,8 +128,8 @@ class Board
         void    capture(Player const & player, Player const & opponent, Coord coord);
         
         long long           evaluate(Player const & player, Player const & opponent, Coord LastMove);
-        bool                isGameOver(Player const & player, Player const & opponent);
-        std::vector<Coord>  generateMoves(int depth);
+        bool                isGameOver(Player const & player, Player const & opponent, Coord last);
+        std::vector<Coord>  generateMoves(int depth, Player const & player);
 };
 
 std::ostream & operator<<(std::ostream & os, Board const & instance);

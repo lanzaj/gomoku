@@ -36,6 +36,13 @@ class Gomoku
         // Functions
         void            play(void);
         MoveEval        minimax(int depth, long long alpha, long long beta, bool maximizing, Player const & player, Player const & opponent, Coord lastMove);
+
+        // Exception
+        class AiException : public std::runtime_error {
+            public:
+                explicit AiException(const std::string& msg)
+                    : std::runtime_error("Ai error: " + msg) {}
+        };
 };
 
 // operator <<
