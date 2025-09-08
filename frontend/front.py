@@ -44,7 +44,6 @@ class GomokuGUI:
             self.canvas.bind("<Leave>", self.clear_hover)
         else:
             while 1:
-                print('demo')
                 self.send({'waiting':True})
                 self.root.after(10, lambda: self.center_window(root))
                 response = self.receive()
@@ -52,10 +51,10 @@ class GomokuGUI:
                 self.root.update_idletasks()
                 time.sleep(0.05)
                 if response.get('win'):
-                    time.sleep(2)
+                    time.sleep(10)
                     exit(0)
 
-    ############## Window  ##############
+    ############## Window ##############
 
     def bar(self, root):
         # Barre de titre custom
@@ -96,6 +95,8 @@ class GomokuGUI:
         width = root.winfo_width()
         height = root.winfo_height()
         screen_width = root.winfo_screenwidth()
+        if screen_width > 2000:
+            screen_width //= 2
         screen_height = root.winfo_screenheight()
         x = (screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)
@@ -144,6 +145,8 @@ class GomokuGUI:
             self.canvas.create_line(pos, CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2)
 
     def redraw(self, response):
+        if response is None:
+            return
         self.canvas.delete("all")
         self.draw_board()
         for stone in response["game_state"]:
@@ -223,7 +226,8 @@ class GomokuGUI:
 
     def handle_move(self, response):
         self.redraw(response)
-
+        if response is None:
+            return
         if response.get("win"):
             self.exit = True
             self.display_winner()
@@ -397,6 +401,8 @@ class StartMenu:
         width = root.winfo_width()
         height = root.winfo_height()
         screen_width = root.winfo_screenwidth()
+        if screen_width > 2000:
+            screen_width //= 2
         screen_height = root.winfo_screenheight()
         x = (screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)
@@ -541,6 +547,8 @@ class OptionsMenu:
         width = root.winfo_width()
         height = root.winfo_height()
         screen_width = root.winfo_screenwidth()
+        if screen_width > 2000:
+            screen_width //= 2
         screen_height = root.winfo_screenheight()
         x = (screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)

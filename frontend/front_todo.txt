@@ -1,5 +1,4 @@
 TODO
-
 - FIX coord out of range!
 - Option propre pour quitter en partie
 
