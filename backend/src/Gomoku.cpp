@@ -118,7 +118,7 @@ MoveEval Gomoku::minimax(int depth, long long alpha, long long beta, bool maximi
 
 
 Coord   Gomoku::playAiTurn_(Player const & player, Player const & opponent) {
-    Board board = getBoard();
+    [[maybe_unused]] Board board = getBoard();
     if (mode_ == "demo") {
         server_.waitDemoFront();
     }

@@ -11,6 +11,8 @@ PORT = 65433
 
 class GomokuGUI:
     BG = "burlywood3"
+    duration = 0
+
     def __init__(self, root, mode, board_size, player_color, rules):
         self.rules = rules
         self.exit = False
@@ -50,7 +52,7 @@ class GomokuGUI:
                 self.handle_move(response)
                 self.root.update_idletasks()
                 time.sleep(0.05)
-                if response.get('win'):
+                if response.get("win"):
                     time.sleep(10)
                     exit(0)
 
@@ -61,10 +63,21 @@ class GomokuGUI:
         self.title_bar = tk.Frame(root, bg="#D2B48C", height=30)  # couleur "bois clair"
         self.title_bar.pack(fill="x", side="top")
 
+
+        # Label qui affichera self.duration
+        self.duration_label = tk.Label(
+            self.title_bar,
+            text=f"Durée : {self.duration:.2f}s",  # valeur initiale
+            bg="#D2B48C",
+            fg="black",
+            font=("Arial", 12, "bold")
+        )
+        self.duration_label.pack(side="left", padx=10)
+
         exit_btn = tk.Button(
             self.title_bar,
             text="Exit",               # croix
-            command=root.destroy,
+            command=self.quit_game,
             bg="#D2B48C",           # fond assorti à la barre
             fg="black",
             bd=0,                   # pas de bordure
@@ -76,6 +89,11 @@ class GomokuGUI:
         exit_btn.pack(side="right", padx=5)
 
         self.make_draggable(self.title_bar) # fenetre movible
+
+    def quit_game(self):
+        self.send({"exit": True})
+        self.root.destroy()
+
 
     def make_draggable(self, widget):
         widget.bind("<Button-1>", self.start_move)
@@ -191,6 +209,7 @@ class GomokuGUI:
         if self.hover_oval:
             self.canvas.delete(self.hover_oval)
             self.hover_oval = None
+
     ##############   Click   ##############
 
     def click_handler(self, event):
@@ -220,7 +239,11 @@ class GomokuGUI:
         
 
         if self.mode == 'ai':
+            start = time.time()
             response = self.receive()
+            end = time.time()
+            self.duration = end - start
+            self.duration_label.config(text=f"Durée : {self.duration:.2f}s")
             self.handle_move(response)
 
 
