@@ -1,10 +1,10 @@
 TODO
 - FIX coord out of range!
-- Option propre pour quitter en partie
+- envoi de 'exit':True quand ca quit                        DONE
 
 Pour les parties PvP:
-- retirer couleur du joueur (que taille du board et debut)
-- ajouter menu de choix pour les modes de début alternatifs
+- retirer couleur du joueur (que taille du board et debut)  DONE
+- ajouter menu de choix pour les modes de début alternatifs DONE
 
 Pour les parties player vs IA:
 - l'IA commence pour les parties où le player choisi blanc

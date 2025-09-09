@@ -35,7 +35,7 @@ class GomokuGUI:
         self.bar(root)
 
         self.sock = self.sock_conn()
-        self.send({"mode": mode, "player_color": player_color, "start_option": rules})
+        self.send({"mode": mode, "player_color": player_color, "start_option": rules, "board_size": board_size})
 
         self.rules_choice()
 
@@ -476,20 +476,36 @@ class OptionsMenu:
         self.make_window_draggable(self.frame) # fenetre movible
         tk.Label(self.frame, text="Choisissez vos options", font=("Arial", 16), bg=self.BG).pack(pady=10)
 
-        # Choix couleur
-        tk.Label(self.frame, text="Couleur du joueur", bg=self.BG).pack()
-        self.color_var = tk.StringVar(value="black")
-        self.color_buttons = {}
-        for color, label in [("black", "Noir"), ("white", "Blanc")]:
-            btn = tk.Button(
-                self.frame, text=label, width=12,
-                bg=self.BG, fg=self.BTN_TEXT,
-                relief="flat", bd=0, pady=5,
-                command=lambda c=color: self.select_option(self.color_var, c, self.color_buttons)
-            )
-            btn.pack(pady=2)
-            self.color_buttons[color] = btn
-        self.select_option(self.color_var, "black", self.color_buttons)  # valeur par défaut
+        if self.mode == 'ai':
+            # Choix couleur
+            tk.Label(self.frame, text="Couleur du joueur", bg=self.BG).pack()
+            self.color_var = tk.StringVar(value="black")
+            self.color_buttons = {}
+            for color, label in [("black", "Noir"), ("white", "Blanc")]:
+                btn = tk.Button(
+                    self.frame, text=label, width=12,
+                    bg=self.BG, fg=self.BTN_TEXT,
+                    relief="flat", bd=0, pady=5,
+                    command=lambda c=color: self.select_option(self.color_var, c, self.color_buttons)
+                )
+                btn.pack(pady=2)
+                self.color_buttons[color] = btn
+            self.select_option(self.color_var, "black", self.color_buttons)  # valeur par défaut
+
+            # Option départ
+            tk.Label(self.frame, text="Règle de départ", bg=self.BG).pack()
+            self.start_var = tk.StringVar(value="standard")
+            self.start_buttons = {}
+            for opt in ["standard", "pro", "swap", "swap2"]:
+                btn = tk.Button(
+                    self.frame, text=opt.capitalize(), width=12,
+                    bg=self.BG, fg=self.BTN_TEXT,
+                    relief="flat", bd=0, pady=5,
+                    command=lambda o=opt: self.select_option(self.start_var, o, self.start_buttons)
+                )
+                btn.pack(pady=2)
+                self.start_buttons[opt] = btn
+            self.select_option(self.start_var, "standard", self.start_buttons)
 
         # Taille plateau
         tk.Label(self.frame, text="Taille du plateau", bg=self.BG).pack()
@@ -506,20 +522,6 @@ class OptionsMenu:
             self.size_buttons[size] = btn
         self.select_option(self.size_var, 19, self.size_buttons)
 
-        # Option départ
-        tk.Label(self.frame, text="Règle de départ", bg=self.BG).pack()
-        self.start_var = tk.StringVar(value="standard")
-        self.start_buttons = {}
-        for opt in ["standard", "pro", "swap", "swap2"]:
-            btn = tk.Button(
-                self.frame, text=opt.capitalize(), width=12,
-                bg=self.BG, fg=self.BTN_TEXT,
-                relief="flat", bd=0, pady=5,
-                command=lambda o=opt: self.select_option(self.start_var, o, self.start_buttons)
-            )
-            btn.pack(pady=2)
-            self.start_buttons[opt] = btn
-        self.select_option(self.start_var, "standard", self.start_buttons)
 
         # Valider
         tk.Button(self.frame, text="Valider", command=self.start_game,
