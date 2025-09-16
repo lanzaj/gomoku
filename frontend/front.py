@@ -20,6 +20,7 @@ class GomokuGUI:
         self.root.title("Gomoku Frontend")
         self.root.overrideredirect(True)  # enlève la barre Windows
         self.mode = mode
+        self.sock = self.sock_conn()
 
         global BOARD_SIZE
         BOARD_SIZE = board_size  # applique la taille de board choisie
@@ -385,6 +386,7 @@ class StartMenu:
         self.frame = tk.Frame(root, padx=200, pady=100, bg=self.BG)
         self.frame.pack()
         root.after(10, lambda: self.center_window(root))
+        self.bar(root)
 
         self.make_window_draggable(self.frame) # fenetre movible
 
@@ -415,9 +417,27 @@ class StartMenu:
         tk.Button(self.frame, text="Joueur vs IA", command=lambda: self.go_options("ai"), **btn_style).pack(pady=5)
         tk.Button(self.frame, text="Demo : IA vs IA", command=lambda: self.go_options("demo"), **btn_style).pack(pady=5)
 
-        self.exit_button()
-
     ############## Window ##############
+
+    def bar(self, root):
+        # Barre de titre custom
+        self.title_bar = tk.Frame(root, bg="#D2B48C", height=30)  # couleur "bois clair"
+        self.title_bar.pack(fill="x", side="top")
+
+        exit_btn = tk.Button(
+            self.title_bar,
+            text="Exit",               # croix
+            command=root.destroy,
+            bg="#D2B48C",           # fond assorti à la barre
+            fg="black",
+            bd=0,                   # pas de bordure
+            relief="flat",
+            font=("Arial", 12, "bold"),
+            highlightthickness=0,
+            activebackground="#C19A6B"  # couleur au survol
+        )
+        exit_btn.pack(side="right", padx=5)
+
 
     def center_window(self, root):
         root.update_idletasks()
@@ -444,19 +464,12 @@ class StartMenu:
         x = event.x_root - self._dx
         y = event.y_root - self._dy
         self.root.geometry(f"+{x}+{y}")
-
-    def exit_button(self):
-        close_btn = tk.Button(self.frame, text="✕", command=self.root.destroy,
-                            bg=self.BG, fg="#4F4F4F", bd=0, relief="flat",
-                            highlightthickness=0,
-                            font=("Arial", 14, "bold"), activebackground=self.BG)
-        
-        close_btn.place(x=600, y=-100)
         
     ##############                 ##############
 
     def go_options(self, mode):
         self.frame.destroy()
+        self.title_bar.destroy()
         OptionsMenu(self.root, mode)
 
     
@@ -472,6 +485,7 @@ class OptionsMenu:
         self.frame = tk.Frame(root, padx=200, pady=100, bg=self.BG)
         self.frame.pack()
         root.after(10, lambda: self.center_window(root))
+        self.bar(root)
         
         self.make_window_draggable(self.frame) # fenetre movible
         tk.Label(self.frame, text="Choisissez vos options", font=("Arial", 16), bg=self.BG).pack(pady=10)
@@ -528,8 +542,6 @@ class OptionsMenu:
                   bg="#8FBC8F", fg="white", font=("Arial", 12, "bold"), relief="flat",
                   activebackground="#6B8E23", pady=5, width=14).pack(pady=20)
 
-        self.exit_button()
-
     ############## Fenetre movible ##############
 
     def make_window_draggable(self, widget):
@@ -559,6 +571,7 @@ class OptionsMenu:
 
     def start_game(self):
         self.frame.destroy()
+        self.title_bar.destroy()
         GomokuGUI(
             self.root,
             self.mode,
@@ -566,6 +579,27 @@ class OptionsMenu:
             self.color_var.get(),
             self.start_var.get()
         )
+
+    ############### Window ##############
+
+    def bar(self, root):
+        # Barre de titre custom
+        self.title_bar = tk.Frame(root, bg="#D2B48C", height=30)  # couleur "bois clair"
+        self.title_bar.pack(fill="x", side="top")
+
+        exit_btn = tk.Button(
+            self.title_bar,
+            text="Exit",               # croix
+            command=root.destroy,
+            bg="#D2B48C",           # fond assorti à la barre
+            fg="black",
+            bd=0,                   # pas de bordure
+            relief="flat",
+            font=("Arial", 12, "bold"),
+            highlightthickness=0,
+            activebackground="#C19A6B"  # couleur au survol
+        )
+        exit_btn.pack(side="right", padx=5)
 
     def center_window(self, root):
         root.update_idletasks()
@@ -578,13 +612,6 @@ class OptionsMenu:
         x = (screen_width // 2) - (width // 2)
         y = (screen_height // 2) - (height // 2)
         root.geometry(f"+{x}+{y}")
-
-    def exit_button(self):
-        close_btn = tk.Button(self.frame, text="✕", command=self.root.destroy,
-                            bg=self.BG, fg="#4F4F4F", bd=0, relief="flat",
-                            highlightthickness=0,
-                            font=("Arial", 14, "bold"), activebackground=self.BG)
-        close_btn.place(x=380, y=-100)
 
 
 
