@@ -65,12 +65,13 @@ json    Server::recv_json_() {
     std::string mode = "";
     memset(buffer, 0, BUFFER_SIZE);
 
-    ssize_t bytes_received = recv(client_socket_, buffer, BUFFER_SIZE, 0);
-
-    if (bytes_received <= 0) {
-        throw Server::ProtocolError("Connection lost");
+    ssize_t bytes_received = 0;
+    
+    while (recv(client_socket_, buffer, BUFFER_SIZE, 0) == 0) {
+        if (bytes_received < 0) {
+            throw Server::ProtocolError("Connection lost");
+        }
     }
-
     json data = json::parse(buffer);
     return data;
 }
