@@ -173,11 +173,10 @@ class GomokuGUI:
             radius = CELL_SIZE // 2 - 2
 
             if color == "sugg":
-                print('draw sugg')
                 self.canvas.create_oval(
                     px - radius, py - radius, px + radius, py + radius,
-                    fill="blue",          # ou "white", "black", à toi de voir
-                    stipple="gray12",     # effet translucide
+                    fill="#a37e4d",          # ou "white", "black", à toi de voir
+                    stipple="gray50",     # effet translucide
                     outline=""
                 )
             else:
@@ -416,7 +415,7 @@ class StartMenu:
             "font": ("Arial", 14, "bold"),
             "bg": self.BG,
             "fg": "#A17C5A",
-            "activebackground": "#5a5a8a",
+            "activebackground": "#725438",
             "activeforeground": "white",
             "relief": "flat",
             "bd": 0,
@@ -551,7 +550,7 @@ class OptionsMenu:
 
         # Valider
         tk.Button(self.frame, text="Valider", command=self.start_game,
-                  bg="#8FBC8F", fg="black", font=("Arial", 12, "bold"), relief="flat",
+                  bg="#C9A07B", fg="black", font=("Arial", 12, "bold"), relief="flat",
                   activebackground="#72854E", activeforeground="white", pady=5, width=14).pack(pady=20)
 
     ############## Fenetre movible ##############
