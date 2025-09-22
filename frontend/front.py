@@ -489,10 +489,11 @@ class OptionsMenu:
         self.make_window_draggable(self.frame) # fenetre movible
         tk.Label(self.frame, text="Choisissez vos options", font=("Arial", 16), bg=self.BG).pack(pady=10)
 
+        self.color_var = tk.StringVar(value="black")
+        self.start_var = tk.StringVar(value="standard")
         if self.mode == 'ai':
             # Choix couleur
             tk.Label(self.frame, text="Couleur du joueur", bg=self.BG).pack()
-            self.color_var = tk.StringVar(value="black")
             self.color_buttons = {}
             for color, label in [("black", "Noir"), ("white", "Blanc")]:
                 btn = tk.Button(
@@ -507,7 +508,6 @@ class OptionsMenu:
 
             # Option départ
             tk.Label(self.frame, text="Règle de départ", bg=self.BG).pack()
-            self.start_var = tk.StringVar(value="standard")
             self.start_buttons = {}
             for opt in ["standard", "pro", "swap", "swap2"]:
                 btn = tk.Button(
