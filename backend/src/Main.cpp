@@ -4,8 +4,7 @@
 // To Do ajouter le fait que l'on peut ne pas win si l'autre peut capturer
 // To Do check isForbiddenDoubleThree pour capture
 
-// CHECK out of bound du front 
-// GERER receive exit: true
+// CHECK out of bound du front
 
 // gerer couleur du joueur vs ia (bonus)
 // voir pour reduire profondeur sur les premiers coups
