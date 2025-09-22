@@ -47,7 +47,6 @@ class GomokuGUI:
             self.canvas.bind("<Leave>", self.clear_hover)
         else:
             while 1:
-                self.send({'waiting':True})
                 response = self.receive()
                 self.handle_move(response)
                 self.root.update_idletasks()
