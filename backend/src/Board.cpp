@@ -82,9 +82,33 @@ std::ostream & operator<<(std::ostream & os, PlayerState const & instance)
         for (int x = 0; x < size; ++x) {
             os << instance.right[y][x] << " ";
         }
-        os << "         ";
+        os << " ";
         for (int x = 0; x < size; ++x) {
             os << instance.left[y][x] << " ";
+        }
+        os << " ";
+        for (int x = 0; x < size; ++x) {
+            os << instance.up[y][x] << " ";
+        }
+        os << " ";
+        for (int x = 0; x < size; ++x) {
+            os << instance.down[y][x] << " ";
+        }
+        os << " ";
+        for (int x = 0; x < size; ++x) {
+            os << instance.upLeft[y][x] << " ";
+        }
+        os << " ";
+        for (int x = 0; x < size; ++x) {
+            os << instance.downLeft[y][x] << " ";
+        }
+        os << " ";
+        for (int x = 0; x < size; ++x) {
+            os << instance.upRight[y][x] << " ";
+        }
+        os << " ";
+        for (int x = 0; x < size; ++x) {
+            os << instance.downRight[y][x] << " ";
         }
         os << std::endl;
     }
@@ -460,7 +484,7 @@ void    Board::updateAlignment_(Coord coord) {
     updateAlignmentDirection_(Cell::White, white_.downRight, coord, DOWN_RIGHT);
     updateAlignmentDirection_(Cell::White, white_.downLeft, coord, DOWN_LEFT);
     // std::cout << black_;
-    // std::cout << *this;
+    // std::cout << white_;
 }
 
 
@@ -593,13 +617,13 @@ bool    Board::isForbiddenDoubleThree(Coord coord, Player const & player) const 
             n_double_three += 1;
         }
     }
-
     return n_double_three >= 2;
 }
 
 std::vector<Coord>  Board::generateMoves(int depth, Player const & player,  Player const & opponent) {
     std::vector<CoordValue> coords;
     std::vector<Coord> moves;
+    //opponent.getColor();
 
     if (getPlayerState_(opponent.getColor()).align5) {
         std::vector<Coord> ret;
@@ -662,4 +686,48 @@ std::vector<Coord>  Board::generateMoves(int depth, Player const & player,  Play
         throw AiException("No move generated the normal way");
 
     return moves;
+}
+
+
+Coord  Board::generateRecommended(Player const & player,  Player const & opponent) const {
+    std::vector<CoordValue> coords;
+    std::vector<Coord> moves;
+
+    if (getPlayerState_(opponent.getColor()).align5) {
+        std::vector<Coord> ret;
+        auto& state = getPlayerState_(opponent.getColor());
+
+        for (int y = 0; y < size_; ++y) {
+            for (int x = 0; x < size_; ++x) {
+                if (state.capturable[y][x] != 0 && checkCaptureWin(opponent, {x, y}, state.align5Coord))
+                    ret.push_back({x, y});
+            }
+        }
+
+        if (ret.size() == 0)
+            throw AiException("No move generated to prevent alignment of 5");
+
+        return getCapturingMoves(ret, player.getColor())[0];
+    }
+
+    // Compute total score for each cell
+    for (int y = 0; y < size_; ++y) {
+        for (int x = 0; x < size_; ++x) {
+            long long total = black_.right[y][x] + black_.left[y][x] + black_.up[y][x] + black_.down[y][x] +
+                        black_.upRight[y][x] + black_.downLeft[y][x] + black_.upLeft[y][x] + black_.downRight[y][x] +
+                        white_.right[y][x] + white_.left[y][x] + white_.up[y][x] + white_.down[y][x] +
+                        white_.upRight[y][x] + white_.downLeft[y][x] + white_.upLeft[y][x] + white_.downRight[y][x];
+            
+            if (total > 0 && !isForbiddenDoubleThree({x, y}, player)) {
+                coords.push_back({x, y, total});
+            }
+        }
+    }
+
+    // Sort by total descending
+    std::sort(coords.begin(), coords.end(), [](const CoordValue &a, const CoordValue &b) {
+        return a.value > b.value;
+    });
+
+    return {coords[0].x, coords[0].y};
 }

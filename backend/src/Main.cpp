@@ -6,10 +6,6 @@
 
 // CHECK out of bound du front 
 // GERER receive exit: true
-// timer
-// suggestion de move
-
-// Proposer des coups
 
 // gerer couleur du joueur vs ia (bonus)
 // voir pour reduire profondeur sur les premiers coups

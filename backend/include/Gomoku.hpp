@@ -28,7 +28,7 @@ class Gomoku
 
         void    init_game_();
         bool    playTurn_(Player &player, Player &opponent);
-        Coord   playHumanTurn_(Player const & player);
+        Coord   playHumanTurn_(Player const & player, Player const & opponent);
         AiMoveResult   playAiTurn_(Player const & player, Player const & opponent);
         
         void    play_(Coord coord, Player const & player,  Player const & opponent);

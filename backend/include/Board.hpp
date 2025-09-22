@@ -95,7 +95,8 @@ class Board
         };
 
         // Scores depending of the length of the alinment
-        static constexpr int   open_score[6] = {0, 2, 20, 600, 30000,   3024000};
+        // WARNING open_score[2] // 2 should be different than closed_score[2]
+        static constexpr int   open_score[6] = {0, 2, 22, 600, 30000,   3024000};
         static constexpr int closed_score[6] = {0, 1, 10,  200,  10000, 1024000};
 
         static constexpr int capture_score[6] = {0, 200, 1000, 5000, 40000, 5024000};
@@ -137,7 +138,7 @@ class Board
         long long           evaluate(Player const & player, Player const & opponent, Coord LastMove);
         bool                isGameOver(Player const & player, Player const & opponent, Coord last);
         std::vector<Coord>  generateMoves(int depth, Player const & player, Player const & opponent);
-
+        Coord               generateRecommended(Player const & player,  Player const & opponent) const;
 
         // Exception
         class AiException : public std::runtime_error {

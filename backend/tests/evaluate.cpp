@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 TEST(Capturable, BugPattern) {
-    Board board;
+    Board board(19);
     Player pl(Cell::Black);
     Player opp(Cell::White);
 
