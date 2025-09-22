@@ -161,7 +161,9 @@ bool Board::isCapturable(int x, int y, Cell const & color) const {
             if (board_[y1][x1] == opp &&
                 board_[y2][x2] == me &&
                 board_[y3][x3] == me &&
-                board_[y4][x4] == Cell::Empty) {
+                board_[y4][x4] == Cell::Empty 
+                // &&isForbiddenDoubleThree({x4, y4}, opp)
+            ) {
                 return true;
             }
         }
@@ -255,6 +257,10 @@ bool    Board::checkWinDirection_(Player const & player, Coord coord, Direction 
     const Cell c = player.getColor();
     int power = 1;
 
+    if (isCapturable(x0, y0, player.getColor())) {
+        return false;
+    }
+
     int x = x0 + dx;
     int y = y0 + dy;
     while (checkInBound(x, y) && c == board_[y][x] && !isCapturable(x, y, player.getColor())) {
@@ -264,7 +270,7 @@ bool    Board::checkWinDirection_(Player const & player, Coord coord, Direction 
     }
     x = x0 - dx;
     y = y0 - dy;
-    while (checkInBound(x, y) && c == board_[y][x] && !isCapturable(x, y, player.getColor())) { 
+    while (checkInBound(x, y) && c == board_[y][x] && !isCapturable(x, y, player.getColor())) {
         ++power;
         x -= dx;
         y -= dy;
@@ -283,6 +289,44 @@ bool    Board::checkWin(Player const & player, Coord coord) const {
         || checkWinDirection_(player, coord, DOWN_RIGHT)
         || checkWinDirection_(player, coord, UP_RIGHT)
         || getCapture_(player) >= 5);                 
+}
+
+bool    Board::checkCaptureWinDirection_(Player const & player, Coord coord, Coord capture, Direction dir) const {
+    int x0 = coord.x, y0 = coord.y, dx = dir.dx, dy = dir.dy;
+    const Cell c = player.getColor();
+    int power = 1;
+
+    if (!(x0 == capture.x && y0 == capture.y)) {
+        return true;
+    }
+
+    int x = x0 + dx;
+    int y = y0 + dy;
+    while (checkInBound(x, y) && c == board_[y][x] && !(x == capture.x && y == capture.y)) {
+        ++power;
+        x += dx;
+        y += dy;
+    }
+    x = x0 - dx;
+    y = y0 - dy;
+    while (checkInBound(x, y) && c == board_[y][x] && !(x == capture.x && y == capture.y)) {
+        ++power;
+        x -= dx;
+        y -= dy;
+    }
+    if (power >= 5) {
+        return false;
+    }
+    return true;
+}
+
+bool    Board::checkCaptureWin(Player const & player, Coord coord, Coord capture) const {
+    if (player.getColor() != board_[coord.y][coord.x])
+        return false;
+    return (checkCaptureWinDirection_(player, coord, capture, RIGHT)
+        || checkCaptureWinDirection_(player, coord, capture, UP)
+        || checkCaptureWinDirection_(player, coord, capture, DOWN_RIGHT)
+        || checkCaptureWinDirection_(player, coord, capture, UP_RIGHT));
 }
 
 void    Board::captureDirection_(Player const & player, Player const & opponent, Coord coord, Direction dir) {
@@ -376,14 +420,16 @@ void Board::updateAlignmentDirection_(Cell const & color, int (&alignment)[BOARD
     // check if closed on the start side
     bool end_closed = !checkInBound(x, y) || board_[y][x] != Cell::Empty;
 
+    if (i >= 5) {
+        getPlayerState_(color).align5Coord = {x0, y0};
+        getPlayerState_(color).align5 = true;
+    }
     // Rate the cell
-    if (!end_closed && !start_closed) {
+    else if (!end_closed && !start_closed) {
         alignment[y0][x0] = open_score[i] / 2;
     }
     else if (!start_closed) {
         alignment[y0][x0] = closed_score[i];
-    } else if (i >= 5) {
-        getPlayerState_(color).closed5 = true;
     }
 
     // check free space is at least 5
@@ -456,7 +502,7 @@ long long Board::evaluateAlignments_(PlayerState const & state, PlayerState cons
             score += state.upLeft[y][x];
             score += state.downRight[y][x];
 
-            score -= opp_state.capturable[y][x] * capture_threat[opp_state.captured];
+            score += opp_state.capturable[y][x] * capture_threat[state.captured];
         }
     }
     return score;
@@ -486,8 +532,8 @@ long long Board::evaluate(Player const & player, Player const & opponent, Coord 
     score -= evaluateAlignments_(opponent_state, opponent_state) * DEFENSE_MODIFIER;
 
     // 2.bis Closed 5
-    score += opponent_state.closed5 * closed_score[5];
-    score -= opponent_state.closed5 * closed_score[5] * DEFENSE_MODIFIER;
+    score += opponent_state.align5 * closed_score[5];
+    score -= opponent_state.align5 * closed_score[5] * DEFENSE_MODIFIER;
 
     // 3. Capture scores
     score += capture_score[player_state.captured];
@@ -551,15 +597,23 @@ std::vector<Coord>  Board::generateMoves(int depth, Player const & player,  Play
     std::vector<CoordValue> coords;
     std::vector<Coord> moves;
 
-    if (getPlayerState_(opponent.getColor()).closed5) {
-        auto& src = getPlayerState_(opponent.getColor()).closed5Coord;
-        std::vector<Coord> closed5Coord(std::begin(src), std::end(src));
-        auto ret = getCapturingMoves(closed5Coord, opponent.getColor());
-        for (int i = 0; i < 5; ++i) {
-            getPlayerState_(opponent.getColor()).closed5Coord[i] = {-1, -1};
+    if (getPlayerState_(opponent.getColor()).align5) {
+        std::vector<Coord> ret;
+        auto& state = getPlayerState_(opponent.getColor());
+
+        for (int y = 0; y < size_; ++y) {
+            for (int x = 0; x < size_; ++x) {
+                if (state.capturable[y][x] != 0 && checkCaptureWin(opponent, {x, y}, state.align5Coord))
+                    ret.push_back({x, y});
+            }
         }
-        getPlayerState_(opponent.getColor()).closed5 = false;
-        return ret;
+        state.align5 = false;
+        state.align5Coord = {-1, -1};
+
+        if (ret.size() == 0)
+            throw AiException("No move generated to prevent alignment of 5");
+
+        return getCapturingMoves(ret, player.getColor());
     }
 
     memset(heatMap_, 0, sizeof(heatMap_));
@@ -581,8 +635,8 @@ std::vector<Coord>  Board::generateMoves(int depth, Player const & player,  Play
             if (total > 0 && !isForbiddenDoubleThree({x, y}, player)) {
                 coords.push_back({x, y, total});
             }
-            if (total >= 1024000)
-                return std::vector<Coord>{ {x, y} };
+            // if (total >= 1024000)
+            //     return std::vector<Coord>{ {x, y} };
         }
     }
 
@@ -599,5 +653,9 @@ std::vector<Coord>  Board::generateMoves(int depth, Player const & player,  Play
         moves.push_back({c.x, c.y});
         ++count;
     }
+
+    if (moves.size() <= 0)
+        throw AiException("No move generated the normal way");
+
     return moves;
 }

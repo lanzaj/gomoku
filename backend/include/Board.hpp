@@ -10,9 +10,9 @@
 # include <vector>
 # include <algorithm>
 
-constexpr int INF = INT_MAX;
-constexpr int WIN = INT_MAX - 1;
-constexpr int LOOSE = -INT_MAX + 1;
+constexpr long long INF = LLONG_MAX;
+constexpr int WIN = INT_MAX;
+constexpr int LOOSE = -INT_MAX;
 constexpr int BOARD_SIZE = 19;
 
 struct Coord { int x; int y; };
@@ -42,10 +42,8 @@ struct PlayerState {
 
     // Pattern evaluation
     int figures[BOARD_SIZE][BOARD_SIZE]{};         // e.g., open threes/fours
-    bool closed5{};
-    Coord closed5Coord[5] = {
-        {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}
-    };
+    bool align5{};
+    Coord align5Coord = {-1, -1};
 };
 
 class Board
@@ -62,6 +60,7 @@ class Board
 
         bool        isCapturable(int x, int y, Cell const & color) const;
         std::vector<Coord> getCapturingMoves(const std::vector<Coord>& targets, Cell color) const;
+        bool        checkCaptureWinDirection_(Player const & player, Coord coord, Coord capture, Direction dir) const;
         bool        checkWinDirection_(Player const & player, Coord coord, Direction dir) const;
         void        captureDirection_(Player const & player, Player const & opponent, Coord coord, Direction dir);
         void        closeAlignmentDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
@@ -119,7 +118,7 @@ class Board
         Cell        reverse(Cell const & c) const;
 
 
-        PlayerState         &getPlayerState_(Cell const & corlor);
+        PlayerState         &getPlayerState_(Cell const & color);
         PlayerState         &getPlayerState_(Player const & player);
         const PlayerState   &getPlayerState_(Player const & player) const;
 
@@ -130,6 +129,7 @@ class Board
         bool    isForbiddenDoubleThree(Coord coord, Player const & player) const;
         bool    checkInBound(int n) const;
         bool    checkInBound(int a, int b) const;
+        bool    checkCaptureWin(Player const & player, Coord coord, Coord capture) const;
         bool    checkWin(Player const & player, Coord coord) const;
         void    capture(Player const & player, Player const & opponent, Coord coord);
         

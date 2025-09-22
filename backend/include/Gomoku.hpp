@@ -17,6 +17,7 @@ class Gomoku
         Player  p_black_;
         Player  p_white_;
         std::string mode_;
+        bool    first_move_centered_;
 
 
         void    init_game_();
