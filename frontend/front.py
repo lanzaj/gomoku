@@ -70,7 +70,7 @@ class GomokuGUI:
                 self.title_bar,
                 text=f"Durée : {self.duration:.2f}s",  # valeur initiale
                 bg="#D2B48C",
-                fg="black",
+                fg="#3F3529",
                 font=("Arial", 12, "bold")
             )
             self.duration_label.pack(side="left", padx=10)
@@ -80,7 +80,7 @@ class GomokuGUI:
             text="Exit",               # croix
             command=self.quit_game,
             bg="#D2B48C",           # fond assorti à la barre
-            fg="black",
+            fg="#3F3529",
             bd=0,                   # pas de bordure
             relief="flat",
             font=("Arial", 12, "bold"),
@@ -440,7 +440,7 @@ class StartMenu:
             text="Exit",               # croix
             command=root.destroy,
             bg="#D2B48C",           # fond assorti à la barre
-            fg="black",
+            fg="#3F3529",
             bd=0,                   # pas de bordure
             relief="flat",
             font=("Arial", 12, "bold"),
@@ -603,7 +603,7 @@ class OptionsMenu:
             text="Exit",               # croix
             command=root.destroy,
             bg="#D2B48C",           # fond assorti à la barre
-            fg="black",
+            fg="#3F3529",
             bd=0,                   # pas de bordure
             relief="flat",
             font=("Arial", 12, "bold"),
