@@ -2,7 +2,11 @@
 
 Gomoku::Gomoku() :  p_black_(Player(Cell::Black)), p_white_(Player(Cell::White)), mode_(""), first_move_centered_(false) {
 }
-Gomoku::~Gomoku() {}
+Gomoku::~Gomoku() {
+    while (!board_.empty()) {
+        board_.pop();
+    }
+}
 
 // Getter
 const Board &Gomoku::getBoard(void) const
@@ -60,20 +64,20 @@ void    Gomoku::play(void) {
     }
 }
 
-Coord   Gomoku::playHumanTurn_(Player const & player) {
+Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent) {
     Board board = getBoard();
     Coord coord;
 
     coord = server_.getCoord();
     if (!board.checkInBound(coord.x, coord.y)) {
-        server_.send_response(board, false, false, 0);
+        server_.send_response(board, false, false, 0, player, opponent);
     }
 
     while (board.getCell(coord) != Cell::Empty || board.isForbiddenDoubleThree(coord, player)) {
-        server_.send_response(board, false, false, 0);
+        server_.send_response(board, false, false, 0, player, opponent);
         coord = server_.getCoord();
         if (!board.checkInBound(coord.x, coord.y)) {
-            server_.send_response(board, false, false, 0);
+            server_.send_response(board, false, false, 0, player, opponent);
         }
     }
     return coord;
@@ -143,7 +147,7 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
     Board board = Board(getBoard());
 
     if (player.isHuman()) {
-        coord = playHumanTurn_(player);
+        coord = playHumanTurn_(player, opponent);
     }
     else {
         if (first_move_centered_) {
@@ -175,7 +179,7 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
         << std::endl;
 
     board_.push(board);
-    server_.send_response(board, win, true, result.timeMs);
+    server_.send_response(board, win, true, result.timeMs, player, opponent);
 
     return win;
 }

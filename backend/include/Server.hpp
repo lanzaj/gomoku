@@ -31,13 +31,20 @@ class Server
         json    init_mode();
         Coord   getCoord();
         void    waitDemoFront();
-        void    send_response(Board const & board, bool win, bool authorized, long long timeMs);
+        void    send_response(Board const & board, bool win, bool authorized, long long timeMs, Player const & player,  Player const & opponent);
 
         // Exception
         class ProtocolError : public std::runtime_error {
             public:
                 explicit ProtocolError(const std::string& msg)
                     : std::runtime_error("Protocol error: " + msg) {}
+        };
+
+        class ExitButton : public std::exception {
+            public:
+                const char* what() const noexcept override {
+                    return "Game exit requested";
+                }
         };
 };
 
