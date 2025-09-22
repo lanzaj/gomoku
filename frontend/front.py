@@ -253,7 +253,7 @@ class GomokuGUI:
         if self.mode == 'ai':
             response = self.receive()
             self.duration = response.get('delay', 0)
-            self.duration_label.config(text=f"Durée : {self.duration:.2f}s")
+            self.duration_label.config(text=f"Durée : {self.duration:0.2f}s")
             self.handle_move(response)
 
 
