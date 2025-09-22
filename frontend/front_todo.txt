@@ -4,15 +4,14 @@ TODO
 
 Pour les parties PvP:
 - retirer couleur du joueur (que taille du board et debut)  DONE
-- ajouter menu de choix pour les modes de début alternatifs DONE
+- retirer menu de choix pour les modes de début alternatifs DONE
 
 Pour les parties player vs IA:
-- l'IA commence pour les parties où le player choisi blanc
-- retirer début alternatif (que couleur et taille)
+- l'IA commence pour les parties où le player choisi blanc BONUS
 
 
 Pour les démos:
-- que la taille du board en option, pas de début alternatif ni choix couleur
+- que la taille du board en option, pas de début alternatif ni choix couleur 
 
 - changer la couleur de la croix en menu (plus de contraste)
 - nouvel ecran de win propre
