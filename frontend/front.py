@@ -158,8 +158,8 @@ class GomokuGUI:
     def draw_board(self):
         for i in range(BOARD_SIZE):
             pos = i * CELL_SIZE + CELL_SIZE // 2
-            self.canvas.create_line(CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, pos)
-            self.canvas.create_line(pos, CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2)
+            self.canvas.create_line(CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, pos, fill="#a37e4d")
+            self.canvas.create_line(pos, CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, fill="#a37e4d")
 
     def redraw(self, response):
         if response is None:
@@ -171,20 +171,19 @@ class GomokuGUI:
             px = x * CELL_SIZE + CELL_SIZE // 2
             py = y * CELL_SIZE + CELL_SIZE // 2
             radius = CELL_SIZE // 2 - 2
-        
-        if color == "sugg":  # coup suggéré par le backend
-            self.canvas.create_oval(
-                px - radius, py - radius, px + radius, py + radius,
-                fill="blue",          # ou "white", "black", à toi de voir
-                stipple="gray50",     # effet translucide
-                outline=""
-            )
-        else:
-            self.canvas.create_oval(
-                px - radius, py - radius, px + radius, py + radius,
-                fill=color,
-                outline=""
-            )
+            if color == "sugg":  # coup suggéré par le backend
+                self.canvas.create_oval(
+                    px - radius, py - radius, px + radius, py + radius,
+                    fill="blue",          # ou "white", "black", à toi de voir
+                    stipple="gray50",     # effet translucide
+                    outline=""
+                )
+            else:
+                self.canvas.create_oval(
+                    px - radius, py - radius, px + radius, py + radius,
+                    fill=color,
+                    outline=""
+                )
 
     def display_winner(self):
         self.canvas.create_text(
@@ -550,8 +549,8 @@ class OptionsMenu:
 
         # Valider
         tk.Button(self.frame, text="Valider", command=self.start_game,
-                  bg="#8FBC8F", fg="white", font=("Arial", 12, "bold"), relief="flat",
-                  activebackground="#6B8E23", pady=5, width=14).pack(pady=20)
+                  bg="#8FBC8F", fg="black", font=("Arial", 12, "bold"), relief="flat",
+                  activebackground="#72854E", activeforeground="white", pady=5, width=14).pack(pady=20)
 
     ############## Fenetre movible ##############
 
