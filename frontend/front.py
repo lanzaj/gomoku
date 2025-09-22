@@ -19,6 +19,7 @@ class GomokuGUI:
         self.root = root
         self.root.title("Gomoku Frontend")
         self.root.overrideredirect(True)  # enlève la barre Windows
+        self.root.wm_attributes("-type", "normal") 
         self.mode = mode
 
         global BOARD_SIZE
@@ -171,11 +172,13 @@ class GomokuGUI:
             px = x * CELL_SIZE + CELL_SIZE // 2
             py = y * CELL_SIZE + CELL_SIZE // 2
             radius = CELL_SIZE // 2 - 2
-            if color == "sugg":  # coup suggéré par le backend
+
+            if color == "sugg":
+                print('draw sugg')
                 self.canvas.create_oval(
                     px - radius, py - radius, px + radius, py + radius,
                     fill="blue",          # ou "white", "black", à toi de voir
-                    stipple="gray50",     # effet translucide
+                    stipple="gray12",     # effet translucide
                     outline=""
                 )
             else:

@@ -97,11 +97,11 @@ void    Server::send_response(Board const & board, bool win, bool authorized) {
         }
     }
 
-    // json_game_state.push_back({
-    //                 {"x", 0},
-    //                 {"y", 0},
-    //                 {"color", "sugg"}
-    // });
+    json_game_state.push_back({
+                    {"x", 0},
+                    {"y", 0},
+                    {"color", "sugg"}
+    });
 
     json response = {
         {"game_state", json_game_state},
