@@ -47,7 +47,6 @@ class GomokuGUI:
         else:
             while 1:
                 self.send({'waiting':True})
-                # self.root.after(10, lambda: self.center_window(root))
                 response = self.receive()
                 self.handle_move(response)
                 self.root.update_idletasks()
