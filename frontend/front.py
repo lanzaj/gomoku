@@ -171,7 +171,7 @@ class GomokuGUI:
             px = x * CELL_SIZE + CELL_SIZE // 2
             py = y * CELL_SIZE + CELL_SIZE // 2
             radius = CELL_SIZE // 2 - 2
-            self.canvas.create_oval(px - radius, py - radius, px + radius, py + radius, fill=color)
+            self.canvas.create_oval(px - radius, py - radius, px + radius, py + radius, fill=color, outline="")
 
     def display_winner(self):
         self.canvas.create_text(
