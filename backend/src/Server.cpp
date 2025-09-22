@@ -76,7 +76,7 @@ json    Server::recv_json_() {
     return data;
 }
 
-void    Server::send_response(Board const & board, bool win, bool authorized) {
+void    Server::send_response(Board const & board, bool win, bool authorized, long long timeMs) {
 
     json json_game_state = json::array();
 
@@ -105,7 +105,7 @@ void    Server::send_response(Board const & board, bool win, bool authorized) {
 
     json response = {
         {"game_state", json_game_state},
-        {"delay", 0},
+        {"delay", timeMs},
         {"win", win},
         {"authorized", authorized},
     };

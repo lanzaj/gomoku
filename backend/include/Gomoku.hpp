@@ -3,11 +3,16 @@
 
 # include <iostream>
 # include <stack>
+# include <chrono>
 # include "Board.hpp"
 # include "Player.hpp"
 # include "Server.hpp"
 
 struct MoveEval { long long score; Coord bestMove;};
+struct AiMoveResult {
+    Coord move;
+    long long timeMs; // execution time in ms
+};
 
 class Gomoku
 {
@@ -24,7 +29,7 @@ class Gomoku
         void    init_game_();
         bool    playTurn_(Player &player, Player &opponent);
         Coord   playHumanTurn_(Player const & player);
-        Coord   playAiTurn_(Player const & player, Player const & opponent);
+        AiMoveResult   playAiTurn_(Player const & player, Player const & opponent);
         
         void    play_(Coord coord, Player const & player,  Player const & opponent);
         void    undo_();

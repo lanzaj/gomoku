@@ -6,6 +6,8 @@
 
 // CHECK out of bound du front 
 // GERER receive exit: true
+// timer
+// suggestion de move
 
 // Proposer des coups
 

@@ -66,14 +66,14 @@ Coord   Gomoku::playHumanTurn_(Player const & player) {
 
     coord = server_.getCoord();
     if (!board.checkInBound(coord.x, coord.y)) {
-        server_.send_response(board, false, false);
+        server_.send_response(board, false, false, 0);
     }
 
     while (board.getCell(coord) != Cell::Empty || board.isForbiddenDoubleThree(coord, player)) {
-        server_.send_response(board, false, false);
+        server_.send_response(board, false, false, 0);
         coord = server_.getCoord();
         if (!board.checkInBound(coord.x, coord.y)) {
-            server_.send_response(board, false, false);
+            server_.send_response(board, false, false, 0);
         }
     }
     return coord;
@@ -119,21 +119,27 @@ MoveEval Gomoku::minimax(int depth, long long alpha, long long beta, bool maximi
 }
 
 
-Coord   Gomoku::playAiTurn_(Player const & player, Player const & opponent) {
+AiMoveResult   Gomoku::playAiTurn_(Player const & player, Player const & opponent) {
     [[maybe_unused]] Board board = getBoard();
     if (mode_ == "demo") {
         server_.waitDemoFront();
     }
+    // Timer
+    auto start = std::chrono::high_resolution_clock::now();
     MoveEval move = minimax(9, -INF, INF, true, player, opponent, {-1, -1});
+    auto end = std::chrono::high_resolution_clock::now();
+    
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     Coord ret = move.bestMove;
 
     if (ret.x == -1 || ret.y == -1)
         throw Board::AiException("Move not found");
-    return ret;
+    return {ret, elapsed};
 }
 
 bool    Gomoku::playTurn_(Player &player, Player &opponent) {
     Coord coord;
+    AiMoveResult result{};
     Board board = Board(getBoard());
 
     if (player.isHuman()) {
@@ -144,8 +150,10 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
             coord = Coord{board_.top().getSize() / 2, board_.top().getSize() / 2};
             first_move_centered_ = false;
         }
-        else
-            coord = playAiTurn_(player, opponent);
+        else {
+            result = playAiTurn_(player, opponent);
+            coord = result.move;
+        }
     }
     int x = coord.x, y = coord.y;
     board.setBoard(player.getColor(), {x, y});
@@ -167,7 +175,7 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
         << std::endl;
 
     board_.push(board);
-    server_.send_response(board, win, true);
+    server_.send_response(board, win, true, result.timeMs);
 
     return win;
 }
