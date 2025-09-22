@@ -48,6 +48,8 @@ class GomokuGUI:
         else:
             while 1:
                 response = self.receive()
+                self.duration = response.get('delay', 0)
+                self.duration_label.config(text=f"Durée : {self.duration/1000:.2f}s")
                 self.handle_move(response)
                 self.root.update_idletasks()
                 if response.get("win", False):
@@ -62,16 +64,16 @@ class GomokuGUI:
         self.title_bar = tk.Frame(root, bg="#D2B48C", height=30)  # couleur "bois clair"
         self.title_bar.pack(fill="x", side="top")
 
-
-        # Label qui affichera self.duration
-        self.duration_label = tk.Label(
-            self.title_bar,
-            text=f"Durée : {self.duration:.2f}s",  # valeur initiale
-            bg="#D2B48C",
-            fg="black",
-            font=("Arial", 12, "bold")
-        )
-        self.duration_label.pack(side="left", padx=10)
+        if self.mode != "human":
+            # Label qui affichera self.duration
+            self.duration_label = tk.Label(
+                self.title_bar,
+                text=f"Durée : {self.duration:.2f}s",  # valeur initiale
+                bg="#D2B48C",
+                fg="black",
+                font=("Arial", 12, "bold")
+            )
+            self.duration_label.pack(side="left", padx=10)
 
         exit_btn = tk.Button(
             self.title_bar,
