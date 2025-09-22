@@ -2,7 +2,11 @@
 
 Gomoku::Gomoku() :  p_black_(Player(Cell::Black)), p_white_(Player(Cell::White)), mode_(""), first_move_centered_(false) {
 }
-Gomoku::~Gomoku() {}
+Gomoku::~Gomoku() {
+    while (!board_.empty()) {
+        board_.pop();
+    }
+}
 
 // Getter
 const Board &Gomoku::getBoard(void) const

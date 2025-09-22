@@ -73,6 +73,11 @@ json    Server::recv_json_() {
         }
     }
     json data = json::parse(buffer);
+
+    if (data.contains("exit") && data["exit"]) {
+        close(client_socket_);
+    }
+
     return data;
 }
 
