@@ -141,9 +141,6 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
     }
     else {
         if (first_move_centered_) {
-            if (mode_ == "demo") {
-                server_.waitDemoFront();
-            }
             coord = Coord{board_.top().getSize() / 2, board_.top().getSize() / 2};
             first_move_centered_ = false;
         }

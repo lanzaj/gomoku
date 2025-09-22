@@ -47,15 +47,14 @@ class GomokuGUI:
             self.canvas.bind("<Leave>", self.clear_hover)
         else:
             while 1:
-                self.send({'waiting':True})
                 self.root.after(10, lambda: self.center_window(root))
                 response = self.receive()
                 self.handle_move(response)
                 self.root.update_idletasks()
-                #time.sleep(0.05)
                 if response.get("win", False):
                     time.sleep(10)
                     exit(0)
+                self.send({'waiting':True})
 
     ############## Window ##############
 
