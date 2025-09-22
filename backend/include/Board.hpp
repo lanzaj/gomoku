@@ -72,7 +72,7 @@ class Board
         long long   evaluateAlignments_(PlayerState const & state, PlayerState const & opp_state);
 
         // Getter
-        int                 getCapture_(Player const & player) const;
+        int         getCapture_(Player const & player) const;
         
         // Setter
         void        incrementCapture_(Player const & player);
@@ -105,7 +105,7 @@ class Board
 
         static constexpr int DEFENSE_MODIFIER = 2;
 
-        Board(); 
+        Board(int size); 
         ~Board() = default;
 
         Board(Board const & src) = default;
@@ -124,6 +124,7 @@ class Board
 
         // Setter
         void    setBoard(Cell color, Coord coord);
+        void    setSize(int size);
 
         // Functions
         bool    isForbiddenDoubleThree(Coord coord, Player const & player) const;

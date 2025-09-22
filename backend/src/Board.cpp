@@ -1,6 +1,6 @@
 #include "Board.hpp"
 
-Board::Board() : size_(BOARD_SIZE) 
+Board::Board(int size) : size_(size) 
 {
     for (int i = 0; i < size_; ++i)
         for (int j = 0; j < size_; ++j)
@@ -40,6 +40,10 @@ void Board::setBoard(Cell color, Coord coord) {
     updateAlignment_(coord);
     updateCapturable_(coord);
     // std::cout << *this;
+}
+
+void Board::setSize(int size) {
+    size_ = size;
 }
 
 // Operator <<

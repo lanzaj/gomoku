@@ -6,11 +6,11 @@
 #    By: jlanza <jlanza@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/16 12:05:27 by jlanza            #+#    #+#              #
-#    Updated: 2025/09/06 03:50:39 by jlanza           ###   ########.fr        #
+#    Updated: 2025/09/22 10:07:13 by jlanza           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = gomoku
+NAME = Gomoku
 TEST_BIN  = run_tests
 
 SOURCES_DIR = ./src/

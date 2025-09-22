@@ -1,7 +1,6 @@
 #include "Gomoku.hpp"
 
 Gomoku::Gomoku() :  p_black_(Player(Cell::Black)), p_white_(Player(Cell::White)), mode_(""), first_move_centered_(false) {
-    board_.push(Board());
 }
 Gomoku::~Gomoku() {}
 
@@ -31,10 +30,12 @@ void    Gomoku::init_game_() {
     // else
     //     throw Server::ProtocolError("Missing 'rules' field in client message");
 
-    // if (data.contains("size"))
-    //     size_ = data["size"];
-    // else
-    //     throw Server::ProtocolError("Missing 'size' field in client message");
+    if (data.contains("board_size")) {
+        size_ = data["board_size"];
+        board_.push(Board(size_));
+    }
+    else
+        throw Server::ProtocolError("Missing 'board_size' field in client message");
 
     std::cout << "MODE DE JEU " << mode_ << std::endl;
     if (mode_ == "ai") {
@@ -140,6 +141,9 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
     }
     else {
         if (first_move_centered_) {
+            if (mode_ == "demo") {
+                server_.waitDemoFront();
+            }
             coord = Coord{board_.top().getSize() / 2, board_.top().getSize() / 2};
             first_move_centered_ = false;
         }
