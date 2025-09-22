@@ -39,6 +39,13 @@ class Server
                 explicit ProtocolError(const std::string& msg)
                     : std::runtime_error("Protocol error: " + msg) {}
         };
+
+        class ExitButton : public std::exception {
+            public:
+                const char* what() const noexcept override {
+                    return "Game exit requested";
+                }
+        };
 };
 
 std::ostream & operator<<(std::ostream & os, Server const & instance);

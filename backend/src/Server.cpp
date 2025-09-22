@@ -76,6 +76,7 @@ json    Server::recv_json_() {
 
     if (data.contains("exit") && data["exit"]) {
         close(client_socket_);
+        throw Server::ExitButton();
     }
 
     return data;
