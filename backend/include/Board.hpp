@@ -128,7 +128,7 @@ class Board
         void    setSize(int size);
 
         // Functions
-        bool    isForbiddenDoubleThree(Coord coord, Player const & player) const;
+        bool    isForbiddenDoubleThree(Coord coord, Cell const & color) const;
         bool    checkInBound(int n) const;
         bool    checkInBound(int a, int b) const;
         bool    checkCaptureWin(Player const & player, Coord coord, Coord capture) const;

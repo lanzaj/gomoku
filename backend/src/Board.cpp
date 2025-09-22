@@ -189,8 +189,8 @@ bool Board::isCapturable(int x, int y, Cell const & color) const {
             if (board_[y1][x1] == opp &&
                 board_[y2][x2] == me &&
                 board_[y3][x3] == me &&
-                board_[y4][x4] == Cell::Empty 
-                // &&isForbiddenDoubleThree({x4, y4}, opp)
+                board_[y4][x4] == Cell::Empty &&
+                !isForbiddenDoubleThree({x4, y4}, opp)
             ) {
                 return true;
             }
@@ -204,6 +204,7 @@ bool Board::isCapturable(int x, int y, Cell const & color) const {
 
         if (checkInBound(x1, y1) && checkInBound(x2, y2) && checkInBound(x3, y3) && checkInBound(x4, y4)) {
             if (board_[y1][x1] == Cell::Empty &&
+                !isForbiddenDoubleThree({x4, y4}, opp) &&
                 board_[y2][x2] == me &&
                 board_[y3][x3] == me &&
                 board_[y4][x4] == opp) {
@@ -580,8 +581,8 @@ bool    Board::isGameOver(Player const & player, Player const & opponent, Coord 
 }
 
 
-bool    Board::isForbiddenDoubleThree(Coord coord, Player const & player) const {
-    PlayerState state = getPlayerState_(player);
+bool    Board::isForbiddenDoubleThree(Coord coord, Cell const & color) const {
+    PlayerState state = getPlayerState_(color);
 
     int n_double_three = 0, x = coord.x, y = coord.y;
 
@@ -660,7 +661,7 @@ std::vector<Coord>  Board::generateMoves(int depth, Player const & player,  Play
                         white_.right[y][x] + white_.left[y][x] + white_.up[y][x] + white_.down[y][x] +
                         white_.upRight[y][x] + white_.downLeft[y][x] + white_.upLeft[y][x] + white_.downRight[y][x];
             
-            if (total > 0 && !isForbiddenDoubleThree({x, y}, player)) {
+            if (total > 0 && !isForbiddenDoubleThree({x, y}, player.getColor())) {
                 coords.push_back({x, y, total});
             }
             // if (total >= 1024000)
@@ -718,7 +719,7 @@ Coord  Board::generateRecommended(Player const & player,  Player const & opponen
                         white_.right[y][x] + white_.left[y][x] + white_.up[y][x] + white_.down[y][x] +
                         white_.upRight[y][x] + white_.downLeft[y][x] + white_.upLeft[y][x] + white_.downRight[y][x];
             
-            if (total > 0 && !isForbiddenDoubleThree({x, y}, player)) {
+            if (total > 0 && !isForbiddenDoubleThree({x, y}, player.getColor())) {
                 coords.push_back({x, y, total});
             }
         }

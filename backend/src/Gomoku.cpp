@@ -73,7 +73,7 @@ Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent) {
         server_.send_response(board, false, false, 0, player, opponent);
     }
 
-    while (board.getCell(coord) != Cell::Empty || board.isForbiddenDoubleThree(coord, player)) {
+    while (board.getCell(coord) != Cell::Empty || board.isForbiddenDoubleThree(coord, player.getColor())) {
         server_.send_response(board, false, false, 0, player, opponent);
         coord = server_.getCoord();
         if (!board.checkInBound(coord.x, coord.y)) {
