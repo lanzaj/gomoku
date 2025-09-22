@@ -1,19 +1,20 @@
 TODO
 - FIX coord out of range!
-- envoi de 'exit':True quand ca quit                        DONE
+- envoi de 'exit':True quand ca quit                                            DONE
 
-Pour les parties PvP:
-- retirer couleur du joueur (que taille du board et debut)  DONE
-- retirer menu de choix pour les modes de début alternatifs DONE
+PvP:
+- retirer couleur du joueur (que taille du board et debut)                      DONE
+- retirer menu de choix pour les modes de début alternatifs                     DONE
 
-Pour les parties player vs IA:
-- l'IA commence pour les parties où le player choisi blanc BONUS
+PvE:
+- l'IA commence pour les parties où le player choisi blanc                      BONUS
+- Gérer les modes swap et swap2                                                 BONUS
 
 
-Pour les démos:
-- que la taille du board en option, pas de début alternatif ni choix couleur 
+DEMO:
+- que la taille du board en option, pas de début alternatif ni choix couleur    DONE en attente du back
 
-- changer la couleur de la croix en menu (plus de contraste)
-- nouvel ecran de win propre
-- voir pour centrer que sur 1 ecran sur du multimonitor
-- ammeliorer le graphisme du plateau de jeu et des pionts
+- changer la couleur de la croix en menu (plus de contraste)                    DONE
+- nouvel ecran de win propre                                                    BONUS
+- voir pour centrer que sur 1 ecran sur du multimonitor                         BONUS
+- ammeliorer le graphisme du plateau de jeu et des pionts                       BONUS
