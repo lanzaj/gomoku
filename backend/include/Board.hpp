@@ -15,7 +15,15 @@ constexpr int WIN = INT_MAX;
 constexpr int LOOSE = -INT_MAX;
 constexpr int BOARD_SIZE = 19;
 
-struct Coord { int x; int y; };
+struct Coord {
+    int x;
+    int y;
+
+    bool operator==(const Coord& other) const {
+        return x == other.x && y == other.y;
+    }
+};
+
 struct CoordValue { int x, y; long long value; };
 struct Direction { int dx; int dy; };
 struct DirMapping {
@@ -139,6 +147,7 @@ class Board
         bool                isGameOver(Player const & player, Player const & opponent, Coord last);
         std::vector<Coord>  generateMoves(int depth, Player const & player, Player const & opponent);
         Coord               generateRecommended(Player const & player,  Player const & opponent) const;
+        std::vector<Coord>  getCapturingMovesToWin(Player const & player) const;
 
         // Exception
         class AiException : public std::runtime_error {

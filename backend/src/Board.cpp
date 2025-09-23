@@ -454,7 +454,7 @@ void Board::updateAlignmentDirection_(Cell const & color, int (&alignment)[BOARD
         getPlayerState_(color).align5 = true;
     }
     // Rate the cell
-    else if (!end_closed && !start_closed) {
+    if (!end_closed && !start_closed) {
         alignment[y0][x0] = open_score[i] / 2;
     }
     else if (!start_closed) {
@@ -494,6 +494,8 @@ void        Board::updateCapturableDirection_(Cell const & color, int (&alignmen
     if (checkInBound(x, y)) {
         if (isCapturable(x, y, color))
             alignment[y][x] = 1;
+        else
+            alignment[y][x] = 0;
     }
 }
 
@@ -689,26 +691,31 @@ std::vector<Coord>  Board::generateMoves(int depth, Player const & player,  Play
     return moves;
 }
 
+std::vector<Coord> Board::getCapturingMovesToWin(Player const & player) const {
+    std::vector<Coord> ret;
+    auto& player_state = getPlayerState_(player.getColor());
+
+    for (int y = 0; y < size_; ++y) {
+        for (int x = 0; x < size_; ++x) {
+            if (player_state.capturable[y][x] != 0 && checkCaptureWin(player, {x, y}, player_state.align5Coord)) {
+                ret.push_back({x, y});
+            }
+        }
+    }
+
+    return getCapturingMoves(ret, player.getColor());
+}
 
 Coord  Board::generateRecommended(Player const & player,  Player const & opponent) const {
     std::vector<CoordValue> coords;
     std::vector<Coord> moves;
 
-    if (getPlayerState_(opponent.getColor()).align5) {
-        std::vector<Coord> ret;
-        auto& state = getPlayerState_(opponent.getColor());
+    opponent.getColor();
+    if (getPlayerState_(player.getColor()).align5) {
+        auto capturingMoves = getCapturingMovesToWin(player);
 
-        for (int y = 0; y < size_; ++y) {
-            for (int x = 0; x < size_; ++x) {
-                if (state.capturable[y][x] != 0 && checkCaptureWin(opponent, {x, y}, state.align5Coord))
-                    ret.push_back({x, y});
-            }
-        }
-
-        if (ret.size() == 0)
-            throw AiException("No move generated to prevent alignment of 5");
-
-        return getCapturingMoves(ret, player.getColor())[0];
+        if (capturingMoves.size() > 0)
+            return capturingMoves[0];
     }
 
     // Compute total score for each cell

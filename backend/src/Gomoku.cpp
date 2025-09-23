@@ -29,11 +29,6 @@ void    Gomoku::init_game_() {
     else
         throw Server::ProtocolError("Missing 'mode' field in client message");
 
-    // if (data.contains("rules"))
-    //     rules_ = data["rules"];
-    // else
-    //     throw Server::ProtocolError("Missing 'rules' field in client message");
-
     if (data.contains("board_size")) {
         size_ = data["board_size"];
         board_.push(Board(size_));
@@ -64,22 +59,50 @@ void    Gomoku::play(void) {
     }
 }
 
-Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent) {
-    Board board = getBoard();
+Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent, Board & board) {
     Coord coord;
 
-    coord = server_.getCoord();
-    if (!board.checkInBound(coord.x, coord.y)) {
-        server_.send_response(board, false, false, 0, player, opponent);
-    }
-
-    while (board.getCell(coord) != Cell::Empty || board.isForbiddenDoubleThree(coord, player.getColor())) {
-        server_.send_response(board, false, false, 0, player, opponent);
+    while (true) {
         coord = server_.getCoord();
-        if (!board.checkInBound(coord.x, coord.y)) {
+
+        if (!board.checkInBound(coord.x, coord.y))
+        {
             server_.send_response(board, false, false, 0, player, opponent);
+            continue;
         }
+        if (board.getCell(coord) != Cell::Empty)
+        {
+            server_.send_response(board, false, false, 0, player, opponent);
+            continue;
+        }
+        if (board.isForbiddenDoubleThree(coord, player.getColor()))
+        {
+            server_.send_response(board, false, false, 0, player, opponent);
+            continue;
+        }
+        if (board.getPlayerState_(opponent).align5) {
+            auto capturingMoves = board.getCapturingMovesToWin(opponent);
+            if (capturingMoves.size() == 0)
+                throw Board::AiException("No capturing move found");
+            
+            if (std::find(capturingMoves.begin(), capturingMoves.end(), coord) 
+                == capturingMoves.end())
+            {
+                server_.send_response(board, false, false, 0, player, opponent);
+                continue;
+            }
+        }
+
+        // All checks passed: valid move
+        break;
     }
+    auto& opponentState = board.getPlayerState_(opponent);
+    opponentState.align5 = false;
+    opponentState.align5Coord = {-1, -1};
+    auto& state = board.getPlayerState_(player);
+    state.align5 = false;
+    state.align5Coord = {-1, -1};
+
     return coord;
 }
 
@@ -147,7 +170,7 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
     Board board = Board(getBoard());
 
     if (player.isHuman()) {
-        coord = playHumanTurn_(player, opponent);
+        coord = playHumanTurn_(player, opponent, board);
     }
     else {
         if (first_move_centered_) {
