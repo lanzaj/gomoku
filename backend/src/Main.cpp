@@ -1,10 +1,13 @@
 #include <iostream>
 #include "Gomoku.hpp"
 
-// To Do ajouter le fait que l'on peut ne pas win si l'autre peut capturer
-// To Do check isForbiddenDoubleThree pour capture
-
+    /// DONE ///
+// Ajouter le fait que l'on peut ne pas win si l'autre peut capturer
+// Check isForbiddenDoubleThree pour capture
 // CHECK out of bound du front
+
+    /// TODO ///
+// faire les figures ! 
 
 // gerer couleur du joueur vs ia (bonus)
 // voir pour reduire profondeur sur les premiers coups

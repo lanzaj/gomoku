@@ -640,7 +640,6 @@ std::vector<Coord>  Board::generateMoves(int depth, Player const & player,  Play
         }
         state.align5 = false;
         state.align5Coord = {-1, -1};
-
         if (ret.size() == 0)
             throw AiException("No move generated to prevent alignment of 5");
 
