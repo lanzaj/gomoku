@@ -50,6 +50,8 @@ struct PlayerState {
 
     // Pattern evaluation
     int figures[BOARD_SIZE][BOARD_SIZE]{};         // e.g., open threes/fours
+
+    int forbiddenThree[BOARD_SIZE][BOARD_SIZE]{};
     bool align5{};
     Coord align5Coord = {-1, -1};
 };
@@ -75,6 +77,7 @@ class Board
         void        updateAlignmentDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
         void        updateAlignment_(Coord coord);
         void        updateCapturableDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
+        void        updateForbiddenThree_(Coord coord);
         void        updateCapturable_(Coord coord);
         void        updateHeatMap_(Coord coord);
         long long   evaluateAlignments_(PlayerState const & state, PlayerState const & opp_state);
@@ -110,7 +113,7 @@ class Board
         static constexpr int capture_score[6] = {0, 1000, 2000, 5000, 40000, 5024000};
         static constexpr int capture_threat[6] = {5, 50, 200, 1000, 10000,  5024000};
 
-        static constexpr int beam_search[10] = {40, 20, 10, 5, 5, 3, 3, 3, 3, 3};
+        static constexpr int beam_search[10] = {40, 21, 12, 7, 5, 4, 3, 2, 2, 2};
 
         static constexpr int DEFENSE_MODIFIER = 2;
 
@@ -132,10 +135,12 @@ class Board
         const PlayerState   &getPlayerState_(Player const & player) const;
 
         // Setter
+        void    setBoardWithCapture(Cell color, Coord coord, Player const & player, Player const & opponent);
         void    setBoard(Cell color, Coord coord);
         void    setSize(int size);
 
         // Functions
+        bool    isForbiddenDoubleThreeFast(Coord coord, Cell const & color) const;
         bool    isForbiddenDoubleThree(Coord coord, Cell const & color) const;
         bool    checkInBound(int n) const;
         bool    checkInBound(int a, int b) const;

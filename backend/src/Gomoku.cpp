@@ -75,7 +75,7 @@ Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent, B
             server_.send_response(board, false, false, 0, player, opponent);
             continue;
         }
-        if (board.isForbiddenDoubleThree(coord, player.getColor()))
+        if (board.isForbiddenDoubleThreeFast(coord, player.getColor()))
         {
             server_.send_response(board, false, false, 0, player, opponent);
             continue;
@@ -114,7 +114,11 @@ MoveEval Gomoku::minimax(int depth, long long alpha, long long beta, bool maximi
 
     if (maximizing) {
         MoveEval best = { -INF, Coord{-1, -1} };
+        int count = 0;
+        int limit = board_.top().beam_search[std::min(depth, 9)];
         for (auto move : board_.top().generateMoves(depth, ai, opponent)) {
+            if (count >= limit && best.bestMove.x != -1 && best.bestMove.y != -1)
+                break;
             play_(move, ai, opponent);
             MoveEval eval = minimax(depth-1, alpha, beta, false, ai, opponent, move);
             undo_();
@@ -125,11 +129,16 @@ MoveEval Gomoku::minimax(int depth, long long alpha, long long beta, bool maximi
             }
             alpha = std::max(alpha, best.score);
             if (beta <= alpha) break;  // prune
+            ++count;
         }
         return best;
     } else {
         MoveEval best = { +INF, Coord{-1, -1} };
+        int count = 0;
+        int limit = board_.top().beam_search[std::min(depth, 9)];
         for (auto move : board_.top().generateMoves(depth, opponent, ai)) {
+            if (count >= limit && best.bestMove.x != -1 && best.bestMove.y != -1)
+                break;
             play_(move, opponent, ai);
             MoveEval eval = minimax(depth-1, alpha, beta, true, ai, opponent, move);
             undo_();
@@ -140,6 +149,7 @@ MoveEval Gomoku::minimax(int depth, long long alpha, long long beta, bool maximi
             }
             beta = std::min(beta, best.score);
             if (beta <= alpha) break;  // prune
+            ++count;
         }
         return best;
     }
@@ -159,8 +169,10 @@ AiMoveResult   Gomoku::playAiTurn_(Player const & player, Player const & opponen
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     Coord ret = move.bestMove;
 
-    if (ret.x == -1 || ret.y == -1)
+    if (ret.x == -1 || ret.y == -1) {
+        //return {board.generateRecommended(player, opponent), elapsed};
         throw Board::AiException("Move not found");
+    }
     return {ret, elapsed};
 }
 
@@ -183,8 +195,7 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
         }
     }
     int x = coord.x, y = coord.y;
-    board.setBoard(player.getColor(), {x, y});
-    board.capture(player, opponent, {x, y});
+    board.setBoardWithCapture(player.getColor(), {x, y}, player, opponent);
     bool win = board.checkWin(player, {x, y});
 
     std::cout << "x:" << coord.x 
@@ -212,8 +223,7 @@ void    Gomoku::play_(Coord coord, Player const & player,  Player const & oppone
     Board newBoard = board_.top();
     int x = coord.x, y = coord.y;
 
-    newBoard.setBoard(player.getColor(), {x, y});
-    newBoard.capture(player, opponent, {x, y});
+    newBoard.setBoardWithCapture(player.getColor(), {x, y}, player, opponent);
     board_.push(newBoard);
 }
 

@@ -6,7 +6,7 @@
 #    By: jlanza <jlanza@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/16 12:05:27 by jlanza            #+#    #+#              #
-#    Updated: 2025/09/22 10:07:13 by jlanza           ###   ########.fr        #
+#    Updated: 2025/09/23 10:32:55 by jlanza           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -32,7 +32,10 @@ CFLAGS =	-Wall -Wextra -Werror -MMD -MP -g3 -std=c++17 \
 			-Iinclude -Ilibs \
 			-I$(LIBS_DIR)/include \
 			-I$(LIBS_DIR) \
-			-pthread
+ 			-pthread \
+			-O2 \
+			-march=native \
+			-flto
 		
 CLIB   = -pthread
 
