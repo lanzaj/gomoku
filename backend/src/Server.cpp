@@ -82,7 +82,7 @@ json    Server::recv_json_() {
     return data;
 }
 
-void    Server::send_response(Board const & board, bool win, bool authorized, long long timeMs, Player const & player,  Player const & opponent) {
+void    Server::send_response(Board const & board, bool win, bool authorized, long long timeMs, Player const & player,  Player const & opponent, Coord suggestion) {
 
     json json_game_state = json::array();
 
@@ -102,12 +102,11 @@ void    Server::send_response(Board const & board, bool win, bool authorized, lo
                 });
         }
     }
-    auto recommendedMove = board.generateRecommended(player, opponent);
 
     if (player.isHuman() && opponent.isHuman()) {
         json_game_state.push_back({
-                        {"x", recommendedMove.x},
-                        {"y", recommendedMove.y},
+                        {"x", suggestion.x},
+                        {"y", suggestion.y},
                         {"color", "sugg"}
         });
     }

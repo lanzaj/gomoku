@@ -35,6 +35,7 @@ struct PlayerState {
     Cell    color;
 
     // Alignment chains
+    // Close[2] adverse = capture threat
     int right[BOARD_SIZE][BOARD_SIZE]{};
     int left[BOARD_SIZE][BOARD_SIZE]{};
     int up[BOARD_SIZE][BOARD_SIZE]{};
@@ -74,7 +75,9 @@ class Board
         bool        checkWinDirection_(Player const & player, Coord coord, Direction dir) const;
         void        captureDirection_(Player const & player, Player const & opponent, Coord coord, Direction dir);
         void        closeAlignmentDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
+        void        updateFiguresDirection_(PlayerState & state, Coord coord);
         void        updateAlignmentDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
+        void        updateFigures_(Coord coord);
         void        updateAlignment_(Coord coord);
         void        updateCapturableDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
         void        updateForbiddenThree_(Coord coord);
@@ -107,13 +110,13 @@ class Board
 
         // Scores depending of the length of the alinment
         // WARNING open_score[2] // 2 should be different than closed_score[2]
-        static constexpr int   open_score[6] = {0, 2, 22, 600, 30000,   3024000};
+        static constexpr int   open_score[6] = {0, 5, 50, 1000, 50000,   3024000};
         static constexpr int closed_score[6] = {0, 1, 10,  200,  5000, 1024000};
 
-        static constexpr int capture_score[6] = {0, 1000, 2000, 5000, 40000, 5024000};
+        static constexpr int capture_score[6] = {0, 200, 500, 2000, 5000, 5024000};
         static constexpr int capture_threat[6] = {5, 50, 200, 1000, 10000,  5024000};
 
-        static constexpr int beam_search[10] = {40, 21, 12, 7, 5, 4, 3, 2, 2, 2};
+        static constexpr int beam_search[10] = {40, 25, 17, 12, 5, 4, 3, 3, 3, 2};
 
         static constexpr int DEFENSE_MODIFIER = 2;
 
@@ -150,9 +153,8 @@ class Board
         
         long long           evaluate(Player const & player, Player const & opponent, Coord LastMove);
         bool                isGameOver(Player const & player, Player const & opponent, Coord last);
-        std::vector<Coord>  generateMoves(int depth, Player const & player, Player const & opponent);
-        Coord               generateRecommended(Player const & player,  Player const & opponent) const;
-        std::vector<Coord>  getCapturingMovesToWin(Player const & player) const;
+        std::vector<Coord>  generateMoves(Player const & player, Player const & opponent);
+        std::vector<Coord>  getCapturingMovesToWin(Player const & player);
 
         // Exception
         class AiException : public std::runtime_error {

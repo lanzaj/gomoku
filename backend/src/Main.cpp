@@ -5,9 +5,10 @@
 // Ajouter le fait que l'on peut ne pas win si l'autre peut capturer
 // Check isForbiddenDoubleThree pour capture
 // CHECK out of bound du front
+// faire les figures ! 
 
     /// TODO ///
-// faire les figures ! 
+// faire des figures non lineaires
 
 // gerer couleur du joueur vs ia (bonus)
 // voir pour reduire profondeur sur les premiers coups

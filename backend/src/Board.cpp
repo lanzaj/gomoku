@@ -48,6 +48,12 @@ void Board::setBoard(Cell color, Coord coord) {
     updateForbiddenThree_(coord);
     updateCapturable_(coord);
     updateAlignment_(coord);
+    for (auto dir : DIRECTIONS) {
+        int x = coord.x + dir.dx;
+        int y = coord.y + dir.dy;
+        if (checkInBound(x, y))
+            updateAlignment_({x, y});
+    }
 }
 
 void Board::setSize(int size) {
@@ -86,22 +92,30 @@ std::ostream & operator<<(std::ostream & os, PlayerState const & instance)
         os << std::setw(2) << x;
     os << std::endl;
     for (int y = 0; y < size; ++y) {
-        os << std::setw(2) << y << " ";
-        for (int x = 0; x < size; ++x) {
-            os << instance.forbiddenThree[y][x] << " ";
-        }
-        os << std::setw(2) << y << " ";
-        for (int x = 0; x < size; ++x) {
-            os << instance.capturable[y][x] << " ";
-        }
+        // os << std::setw(2) << y << " ";
+        // for (int x = 0; x < size; ++x) {
+        //     os << instance.forbiddenThree[y][x] << " ";
+        // }
+        // os << std::setw(2) << y << " ";
+        // for (int x = 0; x < size; ++x) {
+        //     os << instance.capturable[y][x] << " ";
+        // }
         // os << " ";
         // for (int x = 0; x < size; ++x) {
         //     os << instance.right[y][x] << " ";
         // }
-        // os << " ";
-        // for (int x = 0; x < size; ++x) {
-        //     os << instance.left[y][x] << " ";
-        // }
+        os << " ";
+        for (int x = 0; x < size; ++x) {
+            os << instance.capturable[y][x] << " ";
+        }
+        os << " ";
+        for (int x = 0; x < size; ++x) {
+            os << instance.forbiddenThree[y][x] << " ";
+        }
+        os << " ";
+        for (int x = 0; x < size; ++x) {
+            os << instance.figures[y][x] << " ";
+        }
         // os << " ";
         // for (int x = 0; x < size; ++x) {
         //     os << instance.up[y][x] << " ";
@@ -195,7 +209,7 @@ bool Board::isCapturable(int x, int y, Cell const & color) const {
     for (auto &d : directions) {
         int dx = d[0], dy = d[1];
 
-        // --- Check forward pattern: O X X _
+        // --- Check forward pattern: O x X _
         int x1 = x - dx,     y1 = y - dy;     // opponent stone
         int x2 = x,          y2 = y;         // first player stone
         int x3 = x + dx,     y3 = y + dy;    // second player stone
@@ -212,18 +226,18 @@ bool Board::isCapturable(int x, int y, Cell const & color) const {
             }
         }
 
-        // --- Check backward pattern: _ X X O
+        // --- Check backward pattern: O X x _
         x1 = x - 2*dx; y1 = y - 2*dy; // empty cell
         x2 = x - dx;   y2 = y - dy;   // first player stone
         x3 = x;        y3 = y;        // second player stone
         x4 = x + dx;   y4 = y + dy;   // opponent stone
 
         if (checkInBound(x1, y1) && checkInBound(x2, y2) && checkInBound(x3, y3) && checkInBound(x4, y4)) {
-            if (board_[y1][x1] == Cell::Empty &&
-                !isForbiddenDoubleThreeFast({x1, y1}, opp) &&
+            if (board_[y1][x1] == opp &&
                 board_[y2][x2] == me &&
                 board_[y3][x3] == me &&
-                board_[y4][x4] == opp) {
+                board_[y4][x4] == Cell::Empty &&
+                    !isForbiddenDoubleThreeFast({x4, y4}, opp)) {
                 return true;
             }
         }
@@ -386,6 +400,8 @@ void    Board::captureDirection_(Player const & player, Player const & opponent,
         y += dy;
     }
     if (i == 4) {
+        board_[y0 + dy][x0 + dx] = Cell::Empty;
+        board_[y0 + 2 * dy][x0 + 2 * dx] = Cell::Empty;
         setBoard(Cell::Empty, {x0 + dx, y0 + dy});
         black_.capturable[y0 + dy][x0 + dx] = 0;
         white_.capturable[y0 + dy][x0 + dx] = 0;
@@ -483,6 +499,41 @@ void Board::updateAlignmentDirection_(Cell const & color, int (&alignment)[BOARD
     closeAlignmentDirection_(color, alignment, coord, {-dx, -dy});
 }
 
+void    Board::updateFiguresDirection_(PlayerState & state, Coord coord) {
+    int x = coord.x, y = coord.y;
+    std::vector<std::pair<DirMapping, DirMapping>> dirPairs = {
+        { {state.right, RIGHT},   {state.left, LEFT} },
+        { {state.up, UP},         {state.down, DOWN} },
+        { {state.upRight, UP_RIGHT}, {state.downLeft, DOWN_LEFT} },
+        { {state.upLeft, UP_LEFT},   {state.downRight, DOWN_RIGHT} }
+    };
+    for (const auto& [dir1, dir2] : dirPairs) {
+        int alignment1 = dir1.state[y][x];
+        int alignment2 = dir2.state[y][x];
+        if (alignment1 >= 1 &&
+            alignment2 >= 1) {
+            if (alignment1 >= closed_score[3] ||
+                alignment2 >= closed_score[3] ||
+                (alignment1 >= closed_score[2] && alignment2 >= closed_score[2])) {
+                state.figures[y][x] = closed_score[5];
+            }
+        }
+    }
+}
+
+void    Board::updateFigures_(Coord coord) {
+    for (int i = 0; i < 4; ++i) {
+        for (auto dir : DIRECTIONS) {
+            int x = coord.x + dir.dx * i;
+            int y = coord.y + dir.dy * i;
+            if (checkInBound(x, y)) {
+                updateFiguresDirection_(black_, {x, y});
+                updateFiguresDirection_(white_, {x, y});
+            }
+        }
+    }
+}
+
 void    Board::updateAlignment_(Coord coord) {
     updateAlignmentDirection_(Cell::Black, black_.right, coord, RIGHT);
     updateAlignmentDirection_(Cell::Black, black_.left, coord, LEFT);
@@ -501,6 +552,8 @@ void    Board::updateAlignment_(Coord coord) {
     updateAlignmentDirection_(Cell::White, white_.upLeft, coord, UP_LEFT);
     updateAlignmentDirection_(Cell::White, white_.downRight, coord, DOWN_RIGHT);
     updateAlignmentDirection_(Cell::White, white_.downLeft, coord, DOWN_LEFT);
+    
+    updateFigures_(coord);
     // std::cout << black_;
     // std::cout << white_;
 }
@@ -561,6 +614,8 @@ long long Board::evaluateAlignments_(PlayerState const & state, PlayerState cons
             score += state.upLeft[y][x];
             score += state.downRight[y][x];
 
+            score += state.figures[y][x];
+
             score += opp_state.capturable[y][x] * capture_threat[state.captured];
         }
     }
@@ -588,11 +643,11 @@ long long Board::evaluate(Player const & player, Player const & opponent, Coord 
 
     // 2. Alignment scores
     score += evaluateAlignments_(player_state, opponent_state);
-    score -= evaluateAlignments_(opponent_state, opponent_state) * DEFENSE_MODIFIER;
+    score -= evaluateAlignments_(opponent_state, player_state) * DEFENSE_MODIFIER;
 
     // 2.bis Closed 5
-    score += opponent_state.align5 * closed_score[5];
-    score -= opponent_state.align5 * closed_score[5] * DEFENSE_MODIFIER;
+    score += player_state.align5 * closed_score[5];
+    score -= opponent_state.align5 * closed_score[5];
 
     // 3. Capture scores
     score += capture_score[player_state.captured];
@@ -605,9 +660,7 @@ bool    Board::isGameOver(Player const & player, Player const & opponent, Coord 
     if (white_.captured >= 5 || black_.captured >= 5) {
         return true;
     }
-    if (checkWin(player, last) || checkWin(opponent, last))
-        return true;
-    return false;
+    return checkWin(player, last) || checkWin(opponent, last);
 }
 
 bool    Board::isForbiddenDoubleThreeFast(Coord coord, Cell const & color) const {
@@ -656,31 +709,16 @@ bool    Board::isForbiddenDoubleThree(Coord coord, Cell const & color) const {
     return n_double_three >= 2;
 }
 
-std::vector<Coord>  Board::generateMoves(int depth, Player const & player,  Player const & opponent) {
+std::vector<Coord>  Board::generateMoves(Player const & p1,  Player const & p2) {
     std::vector<CoordValue> coords;
     std::vector<Coord> moves;
 
-    if (getPlayerState_(opponent.getColor()).align5) {
-        std::vector<Coord> ret;
-        auto& state = getPlayerState_(opponent.getColor());
+    p2.getColor();
 
-        for (int y = 0; y < size_; ++y) {
-            for (int x = 0; x < size_; ++x) {
-                if (state.capturable[y][x] != 0 && checkCaptureWin(opponent, {x, y}, state.align5Coord)) {
-                    ret.push_back({x, y});
-                }
-            }
-        }
-        state.align5 = false;
-        state.align5Coord = {-1, -1};
-        // if (ret.size() == 0)
-        //     throw AiException("No stone capturable detected to prevent alignment of 5");
-
-        auto moves = getCapturingMoves(ret, opponent.getColor());
-
-        // if (moves.size() == 0)
-        //     throw AiException("No move generated to prevent alignment of 5");
-
+    if (getPlayerState_(p1.getColor()).align5) {
+        auto moves = getCapturingMovesToWin(p1);
+        getPlayerState_(p1.getColor()).align5 = false;
+        getPlayerState_(p1.getColor()).align5Coord = {-1, -1};
         return moves;
     }
 
@@ -695,12 +733,28 @@ std::vector<Coord>  Board::generateMoves(int depth, Player const & player,  Play
     // Compute total score for each cell
     for (int y = 0; y < size_; ++y) {
         for (int x = 0; x < size_; ++x) {
-            long long total = black_.right[y][x] + black_.left[y][x] + black_.up[y][x] + black_.down[y][x] +
-                        black_.upRight[y][x] + black_.downLeft[y][x] + black_.upLeft[y][x] + black_.downRight[y][x] +
-                        white_.right[y][x] + white_.left[y][x] + white_.up[y][x] + white_.down[y][x] +
-                        white_.upRight[y][x] + white_.downLeft[y][x] + white_.upLeft[y][x] + white_.downRight[y][x];
+            if (isForbiddenDoubleThreeFast({x, y}, p1.getColor())) continue;
+            if (board_[y][x] != Cell::Empty) continue;
             
-            if (total > 0 && !isForbiddenDoubleThreeFast({x, y}, player.getColor())) {
+            long long total_black = black_.right[y][x] + black_.left[y][x] + black_.up[y][x] + black_.down[y][x] +
+                        black_.upRight[y][x] + black_.downLeft[y][x] + black_.upLeft[y][x] + black_.downRight[y][x] + 
+                        black_.figures[y][x];
+            long long total_white = white_.right[y][x] + white_.left[y][x] + white_.up[y][x] + white_.down[y][x] +
+                        white_.upRight[y][x] + white_.downLeft[y][x] + white_.upLeft[y][x] + white_.downRight[y][x] +
+                        white_.figures[y][x];
+
+            if (p2.getColor() == Cell::Black && total_black >= closed_score[4]){
+                std::vector<Coord> result;
+                result.push_back({x, y});
+                return result;
+            }
+            if (p2.getColor() == Cell::White && total_white >= closed_score[4]){
+                std::vector<Coord> result;
+                result.push_back({x, y});
+                return result;
+            }
+            long long total = total_black + total_white;
+            if (total > 0) {
                 coords.push_back({x, y, total});
             }
         }
@@ -712,67 +766,27 @@ std::vector<Coord>  Board::generateMoves(int depth, Player const & player,  Play
     });
 
     moves.reserve(coords.size());
-    //int count = 0;
-    //int limit = beam_search[std::min(depth, 9)];
     for (auto &c : coords) {
-        //if (count >= limit) break; 
         moves.push_back({c.x, c.y});
-        // ++count;
     }
 
     if (moves.size() <= 0)
         throw AiException("No move generated the normal way");
 
     return moves;
-    depth +=1;
-    depth -=1;
 }
 
-std::vector<Coord> Board::getCapturingMovesToWin(Player const & player) const {
+std::vector<Coord> Board::getCapturingMovesToWin(Player const & player) {
     std::vector<Coord> ret;
-    auto& player_state = getPlayerState_(player.getColor());
+    auto& state = getPlayerState_(player.getColor());
 
     for (int y = 0; y < size_; ++y) {
         for (int x = 0; x < size_; ++x) {
-            if (player_state.capturable[y][x] != 0 && checkCaptureWin(player, {x, y}, player_state.align5Coord)) {
+            if (state.capturable[y][x] != 0 && checkCaptureWin(player, {x, y}, state.align5Coord)) {
                 ret.push_back({x, y});
             }
         }
     }
 
     return getCapturingMoves(ret, player.getColor());
-}
-
-Coord  Board::generateRecommended(Player const & player,  Player const & opponent) const {
-    std::vector<CoordValue> coords;
-    std::vector<Coord> moves;
-
-    opponent.getColor();
-    if (getPlayerState_(player.getColor()).align5) {
-        auto capturingMoves = getCapturingMovesToWin(player);
-
-        if (capturingMoves.size() > 0)
-            return capturingMoves[0];
-    }
-
-    // Compute total score for each cell
-    for (int y = 0; y < size_; ++y) {
-        for (int x = 0; x < size_; ++x) {
-            long long total = black_.right[y][x] + black_.left[y][x] + black_.up[y][x] + black_.down[y][x] +
-                        black_.upRight[y][x] + black_.downLeft[y][x] + black_.upLeft[y][x] + black_.downRight[y][x] +
-                        white_.right[y][x] + white_.left[y][x] + white_.up[y][x] + white_.down[y][x] +
-                        white_.upRight[y][x] + white_.downLeft[y][x] + white_.upLeft[y][x] + white_.downRight[y][x];
-            
-            if (total > 0 && !isForbiddenDoubleThreeFast({x, y}, player.getColor())) {
-                coords.push_back({x, y, total});
-            }
-        }
-    }
-
-    // Sort by total descending
-    std::sort(coords.begin(), coords.end(), [](const CoordValue &a, const CoordValue &b) {
-        return a.value > b.value;
-    });
-
-    return {coords[0].x, coords[0].y};
 }
