@@ -58,8 +58,7 @@ class GomokuGUI:
                 self.handle_move(response)
                 self.root.update_idletasks()
                 if response.get("win", False):
-                    time.sleep(10)
-                    exit(0)
+                    break
                 self.send({'waiting':True})
 
     ############## Window ##############

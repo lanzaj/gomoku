@@ -75,7 +75,7 @@ Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent, B
             server_.send_response(board, false, false, 0, player, opponent, {-1, -1});
             continue;
         }
-        if (board.isForbiddenDoubleThreeFast(coord, player.getColor()))
+        if (board.isForbiddenDoubleThree(coord, player.getColor()))
         {
             server_.send_response(board, false, false, 0, player, opponent, {-1, -1});
             continue;
@@ -105,11 +105,11 @@ MoveEval Gomoku::minimax(int depth, long long alpha, long long beta, bool maximi
                     if (depth >= 9 || board_.top().isGameOver(p1, p2, lastMove)) {
         return { board_.top().evaluate(p1, p2, lastMove), {-1, -1} };
     }
+    int limit = board_.top().beam_search[std::min(depth, 9)];
 
     if (maximizing) {
         MoveEval best = { -INF, Coord{-1, -1} };
         int count = 0;
-        int limit = board_.top().beam_search[std::min(depth, 9)];
         for (auto move : board_.top().generateMoves(p1, p2)) {
             if (count >= limit && best.bestMove.x != -1 && best.bestMove.y != -1)
                 break;
@@ -129,7 +129,6 @@ MoveEval Gomoku::minimax(int depth, long long alpha, long long beta, bool maximi
     } else {
         MoveEval best = { +INF, Coord{-1, -1} };
         int count = 0;
-        int limit = board_.top().beam_search[std::min(depth, 9)];
         for (auto move : board_.top().generateMoves(p2, p1)) {
             if (count >= limit && best.bestMove.x != -1 && best.bestMove.y != -1)
                 break;

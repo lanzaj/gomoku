@@ -402,13 +402,17 @@ void    Board::captureDirection_(Player const & player, Player const & opponent,
     if (i == 4) {
         board_[y0 + dy][x0 + dx] = Cell::Empty;
         board_[y0 + 2 * dy][x0 + 2 * dx] = Cell::Empty;
-        setBoard(Cell::Empty, {x0 + dx, y0 + dy});
         black_.capturable[y0 + dy][x0 + dx] = 0;
         white_.capturable[y0 + dy][x0 + dx] = 0;
-        setBoard(Cell::Empty, {x0 + 2 * dx, y0 + 2 * dy});
         black_.capturable[y0 + 2 * dy][x0 + 2 * dx] = 0;
         white_.capturable[y0 + 2 * dy][x0 + 2 * dx] = 0;
+        setBoard(Cell::Empty, {x0 + dx, y0 + dy});
+        setBoard(Cell::Empty, {x0 + 2 * dx, y0 + 2 * dy});
+        updateAlignment_({x0 + dx, y0 + dy});
+        updateAlignment_({x0 + 2 * dx, y0 + 2 * dy});
         incrementCapture_(player);
+        getPlayerState_(player).align5 = false;
+        getPlayerState_(opponent).align5 = false;
     }
 }
 
@@ -713,12 +717,12 @@ std::vector<Coord>  Board::generateMoves(Player const & p1,  Player const & p2) 
     std::vector<CoordValue> coords;
     std::vector<Coord> moves;
 
-    p2.getColor();
-
     if (getPlayerState_(p1.getColor()).align5) {
         auto moves = getCapturingMovesToWin(p1);
-        getPlayerState_(p1.getColor()).align5 = false;
-        getPlayerState_(p1.getColor()).align5Coord = {-1, -1};
+        return moves;
+    }
+    if (getPlayerState_(p2.getColor()).align5) {
+        auto moves = getCapturingMovesToWin(p2);
         return moves;
     }
 
@@ -743,12 +747,7 @@ std::vector<Coord>  Board::generateMoves(Player const & p1,  Player const & p2) 
                         white_.upRight[y][x] + white_.downLeft[y][x] + white_.upLeft[y][x] + white_.downRight[y][x] +
                         white_.figures[y][x];
 
-            if (p2.getColor() == Cell::Black && total_black >= closed_score[4]){
-                std::vector<Coord> result;
-                result.push_back({x, y});
-                return result;
-            }
-            if (p2.getColor() == Cell::White && total_white >= closed_score[4]){
+            if (total_black >= closed_score[4] || total_white >= closed_score[4]){
                 std::vector<Coord> result;
                 result.push_back({x, y});
                 return result;

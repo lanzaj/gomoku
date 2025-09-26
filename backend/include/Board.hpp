@@ -111,12 +111,12 @@ class Board
         // Scores depending of the length of the alinment
         // WARNING open_score[2] // 2 should be different than closed_score[2]
         static constexpr int   open_score[6] = {0, 5, 50, 1000, 50000,   3024000};
-        static constexpr int closed_score[6] = {0, 1, 10,  200,  5000, 1024000};
+        static constexpr int closed_score[6] = {0, 1, 10,  200,  15000, 1024000};
 
         static constexpr int capture_score[6] = {0, 200, 500, 2000, 5000, 5024000};
         static constexpr int capture_threat[6] = {5, 50, 200, 1000, 10000,  5024000};
 
-        static constexpr int beam_search[10] = {40, 25, 17, 12, 5, 4, 3, 3, 3, 2};
+        static constexpr int beam_search[10] = {30, 15, 5, 5, 5, 4, 3, 3, 3, 2};
 
         static constexpr int DEFENSE_MODIFIER = 2;
 

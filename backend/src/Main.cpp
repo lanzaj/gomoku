@@ -8,6 +8,7 @@
 // faire les figures ! 
 
     /// TODO ///
+// fix le double three
 // faire des figures non lineaires
 
 // gerer couleur du joueur vs ia (bonus)
