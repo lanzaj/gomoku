@@ -71,6 +71,7 @@ class Board
 
         bool        isCapturable(int x, int y, Cell const & color) const;
         std::vector<Coord> getCapturingMoves(const std::vector<Coord>& targets, Cell color) const;
+        bool        check5AlignmentDirection_(Player const & player, Coord coord, Direction dir) const;
         bool        checkCaptureWinDirection_(Player const & player, Coord coord, Coord capture, Direction dir) const;
         bool        checkWinDirection_(Player const & player, Coord coord, Direction dir) const;
         void        captureDirection_(Player const & player, Player const & opponent, Coord coord, Direction dir);

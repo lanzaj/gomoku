@@ -268,7 +268,7 @@ std::vector<Coord> Board::getCapturingMoves(const std::vector<Coord>& targets,
         for (auto& d : directions) {
             int dx = d[0], dy = d[1];
 
-            // Case: O X X _
+            // Case: O x X _
             int x1 = x - dx,     y1 = y - dy;
             int x2 = x,          y2 = y;
             int x3 = x + dx,     y3 = y + dy;
@@ -280,13 +280,14 @@ std::vector<Coord> Board::getCapturingMoves(const std::vector<Coord>& targets,
                 if (board_[y1][x1] == opp &&
                     board_[y2][x2] == me &&
                     board_[y3][x3] == me &&
-                    board_[y4][x4] == Cell::Empty)
+                    board_[y4][x4] == Cell::Empty &&
+                    !isForbiddenDoubleThree({x4, y4}, opp))
                 {
                     capturingMoves.push_back(Coord{x4,y4});
                 }
             }
 
-            // Case: _ X X O
+            // Case: O X x _
             x1 = x - 2*dx; y1 = y - 2*dy;
             x2 = x - dx;   y2 = y - dy;
             x3 = x;        y3 = y;
@@ -295,18 +296,17 @@ std::vector<Coord> Board::getCapturingMoves(const std::vector<Coord>& targets,
             if (checkInBound(x1,y1) && checkInBound(x2,y2) &&
                 checkInBound(x3,y3) && checkInBound(x4,y4))
             {
-                if (board_[y1][x1] == Cell::Empty &&
+                if (board_[y1][x1] == opp &&
                     board_[y2][x2] == me &&
                     board_[y3][x3] == me &&
-                    board_[y4][x4] == opp)
+                    board_[y4][x4] == Cell::Empty &&
+                    !isForbiddenDoubleThree({x4, y4}, opp))
                 {
-                    capturingMoves.push_back(Coord{x1,y1});
+                    capturingMoves.push_back(Coord{x4,y4});
                 }
             }
         }
     }
-    // if (capturingMoves.size() == 0)
-    //     throw AiException("capturing moves empty :(");
     return capturingMoves;
 }
 
@@ -349,14 +349,40 @@ bool    Board::checkWin(Player const & player, Coord coord) const {
         || getCapture_(player) >= 5);                 
 }
 
-bool    Board::checkCaptureWinDirection_(Player const & player, Coord coord, Coord capture, Direction dir) const {
+bool    Board::check5AlignmentDirection_(Player const & player, Coord coord, Direction dir) const {
     int x0 = coord.x, y0 = coord.y, dx = dir.dx, dy = dir.dy;
     const Cell c = player.getColor();
     int power = 1;
 
-    // if (!(x0 == capture.x && y0 == capture.y)) {
-    //     return true;
-    // }
+    int x = x0 + dx;
+    int y = y0 + dy;
+    while (checkInBound(x, y) && c == board_[y][x]) {
+        ++power;
+        x += dx;
+        y += dy;
+    }
+    x = x0 - dx;
+    y = y0 - dy;
+    while (checkInBound(x, y) && c == board_[y][x]) {
+        ++power;
+        x -= dx;
+        y -= dy;
+    }
+    if (power >= 5) {
+        return true;
+    }
+    return false;
+}
+
+bool    Board::checkCaptureWinDirection_(Player const & player, Coord coord, Coord capture, Direction dir) const {
+    int x0 = coord.x, y0 = coord.y, dx = dir.dx, dy = dir.dy;
+    const Cell c = player.getColor();
+    int power = 1;
+    bool block5 = false;
+
+    if (x0 == capture.x && y0 == capture.y) {
+        return true;
+    }
 
     int x = x0 + dx;
     int y = y0 + dy;
@@ -365,6 +391,9 @@ bool    Board::checkCaptureWinDirection_(Player const & player, Coord coord, Coo
         x += dx;
         y += dy;
     }
+    if (x == capture.x && y == capture.y) {
+        block5 = true;
+    }
     x = x0 - dx;
     y = y0 - dy;
     while (checkInBound(x, y) && c == board_[y][x] && !(x == capture.x && y == capture.y)) {
@@ -372,19 +401,22 @@ bool    Board::checkCaptureWinDirection_(Player const & player, Coord coord, Coo
         x -= dx;
         y -= dy;
     }
+    if (x == capture.x && y == capture.y) {
+        block5 = true;
+    }
     if (power >= 5) {
         return false;
     }
-    return true;
+    return block5;
 }
 
 bool    Board::checkCaptureWin(Player const & player, Coord coord, Coord capture) const {
     if (player.getColor() != board_[coord.y][coord.x])
         return false;
-    return (checkCaptureWinDirection_(player, coord, capture, RIGHT)
-        || checkCaptureWinDirection_(player, coord, capture, UP)
-        || checkCaptureWinDirection_(player, coord, capture, DOWN_RIGHT)
-        || checkCaptureWinDirection_(player, coord, capture, UP_RIGHT));
+    return ((checkCaptureWinDirection_(player, coord, capture, RIGHT) && check5AlignmentDirection_(player, coord, RIGHT))
+        || (checkCaptureWinDirection_(player, coord, capture, UP) && check5AlignmentDirection_(player, coord, UP))
+        || (checkCaptureWinDirection_(player, coord, capture, DOWN_RIGHT) && check5AlignmentDirection_(player, coord, DOWN_RIGHT))
+        || (checkCaptureWinDirection_(player, coord, capture, UP_RIGHT) && check5AlignmentDirection_(player, coord, UP_RIGHT)));
 }
 
 void    Board::captureDirection_(Player const & player, Player const & opponent, Coord coord, Direction dir) {
@@ -736,12 +768,10 @@ std::vector<Coord>  Board::generateMoves(Player const & p1,  Player const & p2) 
 
     if (getPlayerState_(p1.getColor()).align5) {
         auto moves = getCapturingMovesToWin(p1);
-        std::cout << "generate p1 capturing moves" << std::endl;
         return moves;
     }
     if (getPlayerState_(p2.getColor()).align5) {
         auto moves = getCapturingMovesToWin(p2);
-        std::cout << "generate p2 capturing moves" << std::endl;
         return moves;
     }
 

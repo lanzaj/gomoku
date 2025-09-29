@@ -236,7 +236,7 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
     board_.push(board);
 
     Coord suggestion = {-1, -1};
-    if (player.isHuman() && opponent.isHuman() && mode_ == "human")
+    if (mode_ == "human")
         suggestion = minimax(0, -INF, INF, true, player, opponent, {-1, -1}).bestMove;
 
     std::cout << "x:" << coord.x 
