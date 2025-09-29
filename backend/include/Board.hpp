@@ -53,7 +53,6 @@ struct PlayerState {
     int figures[BOARD_SIZE][BOARD_SIZE]{};         // e.g., open threes/fours
     int broken[BOARD_SIZE][BOARD_SIZE]{};
 
-    int forbiddenThree[BOARD_SIZE][BOARD_SIZE]{};
     bool align5{};
     Coord align5Coord = {-1, -1};
 };
@@ -72,6 +71,7 @@ class Board
 
         bool        isCapturable(int x, int y, Cell const & color) const;
         std::vector<Coord> getCapturingMoves(const std::vector<Coord>& targets, Cell color) const;
+        bool        check5AlignmentDirection_(Player const & player, Coord coord, Direction dir) const;
         bool        checkCaptureWinDirection_(Player const & player, Coord coord, Coord capture, Direction dir) const;
         bool        checkWinDirection_(Player const & player, Coord coord, Direction dir) const;
         void        captureDirection_(Player const & player, Player const & opponent, Coord coord, Direction dir);
@@ -83,7 +83,6 @@ class Board
         void        updateFigures_(Coord coord);
         void        updateAlignment_(Coord coord);
         void        updateCapturableDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
-        void        updateForbiddenThree_(Coord coord);
         void        updateCapturable_(Coord coord);
         void        updateHeatMap_(Coord coord);
         long long   evaluateAlignments_(PlayerState const & state, PlayerState const & opp_state);
@@ -146,7 +145,6 @@ class Board
         void    setSize(int size);
 
         // Functions
-        bool    isForbiddenDoubleThreeFast(Coord coord, Cell const & color) const;
         bool    isForbiddenDoubleThree(Coord coord, Cell const & color) const;
         bool    checkInBound(int n) const;
         bool    checkInBound(int a, int b) const;

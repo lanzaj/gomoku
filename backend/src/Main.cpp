@@ -1,11 +1,6 @@
 #include <iostream>
 #include "Gomoku.hpp"
 
-
-// TODO
-// BONUS START
-// BONUS THEME
-
 int main(void) {
     try
     {
