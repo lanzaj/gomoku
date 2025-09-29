@@ -6,7 +6,7 @@
 #    By: jlanza <jlanza@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/07/16 12:05:27 by jlanza            #+#    #+#              #
-#    Updated: 2025/09/23 10:32:55 by jlanza           ###   ########.fr        #
+#    Updated: 2025/09/30 01:47:23 by jlanza           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -113,7 +113,7 @@ tests: $(TEST_BIN)
 
 run: all
 	./$(NAME) &
-	cd ../frontend && python3 front.py
+	cd ../frontend && python3 Gomoku.py
 
 # **************************************************************************** #
 #                               CLEAN RULES                                    #
