@@ -112,6 +112,10 @@ std::ostream & operator<<(std::ostream & os, PlayerState const & instance)
         for (int x = 0; x < size; ++x) {
             os << instance.forbiddenThree[y][x] << " ";
         }
+        // os << " ";
+        // for (int x = 0; x < size; ++x) {
+        //     os << instance.broken[y][x] << " ";
+        // }
         os << " ";
         for (int x = 0; x < size; ++x) {
             os << instance.figures[y][x] << " ";
@@ -392,8 +396,8 @@ bool    Board::checkCaptureWin(Player const & player, Coord coord, Coord capture
 void    Board::captureDirection_(Player const & player, Player const & opponent, Coord coord, Direction dir) {
     const bool pattern[4] = {true, false, false, true};
     int i = 0, y0 = coord.y, x0 = coord.x, dx = dir.dx, dy = dir.dy, x = coord.x, y = coord.y;
-    while (((player.getColor() == board_[y][x] && pattern[i]) || (opponent.getColor() == board_[y][x] && !pattern[i]))
-        && checkInBound(x, y) && i < 4)
+    while (checkInBound(x, y) && ((player.getColor() == board_[y][x] && pattern[i]) || (opponent.getColor() == board_[y][x] && !pattern[i]))
+        && i < 4)
     {
         ++i;
         x += dx;
@@ -505,6 +509,26 @@ void Board::updateAlignmentDirection_(Cell const & color, int (&alignment)[BOARD
 
 void    Board::updateFiguresDirection_(PlayerState & state, Coord coord) {
     int x = coord.x, y = coord.y;
+    std::vector<DirMapping> dir = {
+        {state.right, RIGHT},   {state.left, LEFT},
+        {state.up, UP},         {state.down, DOWN},
+        {state.upRight, UP_RIGHT}, {state.downLeft, DOWN_LEFT},
+        {state.upLeft, UP_LEFT},   {state.downRight, DOWN_RIGHT}
+    };
+    int count = 0;
+    for (const auto& d : dir) {
+        int value = d.state[y][x];
+        if (value >= 10) {
+            count += 1;
+        }
+    }
+    if (count >= 1) {
+        state.figures[y][x] = closed_score[2];
+    }
+}
+
+void    Board::updateBrokenDirection_(PlayerState & state, Coord coord) {
+    int x = coord.x, y = coord.y;
     std::vector<std::pair<DirMapping, DirMapping>> dirPairs = {
         { {state.right, RIGHT},   {state.left, LEFT} },
         { {state.up, UP},         {state.down, DOWN} },
@@ -519,7 +543,7 @@ void    Board::updateFiguresDirection_(PlayerState & state, Coord coord) {
             if (alignment1 >= closed_score[3] ||
                 alignment2 >= closed_score[3] ||
                 (alignment1 >= closed_score[2] && alignment2 >= closed_score[2])) {
-                state.figures[y][x] = closed_score[5];
+                state.broken[y][x] = closed_score[5];
             }
         }
     }
@@ -533,6 +557,19 @@ void    Board::updateFigures_(Coord coord) {
             if (checkInBound(x, y)) {
                 updateFiguresDirection_(black_, {x, y});
                 updateFiguresDirection_(white_, {x, y});
+            }
+        }
+    }
+}
+
+void    Board::updateBroken_(Coord coord) {
+    for (int i = 0; i < 4; ++i) {
+        for (auto dir : DIRECTIONS) {
+            int x = coord.x + dir.dx * i;
+            int y = coord.y + dir.dy * i;
+            if (checkInBound(x, y)) {
+                updateBrokenDirection_(black_, {x, y});
+                updateBrokenDirection_(white_, {x, y});
             }
         }
     }
@@ -558,6 +595,7 @@ void    Board::updateAlignment_(Coord coord) {
     updateAlignmentDirection_(Cell::White, white_.downLeft, coord, DOWN_LEFT);
     
     updateFigures_(coord);
+    updateBroken_(coord);
     // std::cout << black_;
     // std::cout << white_;
 }
@@ -578,8 +616,10 @@ void        Board::updateForbiddenThree_(Coord coord) {
         for (int i = 0; i < 4; ++i) {
             int x = coord.x + dir.dx * i;
             int y = coord.y + dir.dy * i;
-            black_.forbiddenThree[y][x] = isForbiddenDoubleThree({x, y}, Cell::Black);
-            white_.forbiddenThree[y][x] = isForbiddenDoubleThree({x, y}, Cell::White);
+            if (checkInBound(x, y)) {
+                black_.forbiddenThree[y][x] = isForbiddenDoubleThree({x, y}, Cell::Black);
+                white_.forbiddenThree[y][x] = isForbiddenDoubleThree({x, y}, Cell::White);
+            }
         }
     }
 }
@@ -619,6 +659,7 @@ long long Board::evaluateAlignments_(PlayerState const & state, PlayerState cons
             score += state.downRight[y][x];
 
             score += state.figures[y][x];
+            score += state.broken[y][x];
 
             score += opp_state.capturable[y][x] * capture_threat[state.captured];
         }
@@ -742,10 +783,10 @@ std::vector<Coord>  Board::generateMoves(Player const & p1,  Player const & p2) 
             
             long long total_black = black_.right[y][x] + black_.left[y][x] + black_.up[y][x] + black_.down[y][x] +
                         black_.upRight[y][x] + black_.downLeft[y][x] + black_.upLeft[y][x] + black_.downRight[y][x] + 
-                        black_.figures[y][x];
+                        black_.figures[y][x] + black_.broken[y][x];
             long long total_white = white_.right[y][x] + white_.left[y][x] + white_.up[y][x] + white_.down[y][x] +
                         white_.upRight[y][x] + white_.downLeft[y][x] + white_.upLeft[y][x] + white_.downRight[y][x] +
-                        white_.figures[y][x];
+                        white_.figures[y][x] + white_.broken[y][x];
 
             if (total_black >= closed_score[4] || total_white >= closed_score[4]){
                 std::vector<Coord> result;

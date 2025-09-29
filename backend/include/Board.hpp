@@ -51,6 +51,7 @@ struct PlayerState {
 
     // Pattern evaluation
     int figures[BOARD_SIZE][BOARD_SIZE]{};         // e.g., open threes/fours
+    int broken[BOARD_SIZE][BOARD_SIZE]{};
 
     int forbiddenThree[BOARD_SIZE][BOARD_SIZE]{};
     bool align5{};
@@ -75,6 +76,8 @@ class Board
         bool        checkWinDirection_(Player const & player, Coord coord, Direction dir) const;
         void        captureDirection_(Player const & player, Player const & opponent, Coord coord, Direction dir);
         void        closeAlignmentDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
+        void        updateBrokenDirection_(PlayerState & state, Coord coord);
+        void        updateBroken_(Coord coord);
         void        updateFiguresDirection_(PlayerState & state, Coord coord);
         void        updateAlignmentDirection_(Cell const & color, int (&alignment)[BOARD_SIZE][BOARD_SIZE], Coord coord, Direction dir);
         void        updateFigures_(Coord coord);
