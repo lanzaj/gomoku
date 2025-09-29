@@ -46,7 +46,6 @@ class GomokuGUI:
 
         self.rules_choice()
         if self.rules == 'ai_first':
-            print('foi')
             self.redraw(self.receive())
             self.root.update_idletasks()
 
@@ -121,7 +120,6 @@ class GomokuGUI:
         self.make_draggable(self.title_bar) # fenetre movible
 
     def change_theme(self):
-        # Toggle du dark mode
         self.dark_mode = not self.dark_mode
 
         if self.dark_mode:
@@ -205,8 +203,31 @@ class GomokuGUI:
     def draw_board(self):
         for i in range(BOARD_SIZE):
             pos = i * CELL_SIZE + CELL_SIZE // 2
-            self.canvas.create_line(CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, pos, fill=self.line_color)
-            self.canvas.create_line(pos, CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, fill=self.line_color)
+            self.canvas.create_line(
+                CELL_SIZE // 2, pos,
+                (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, pos,
+                fill=self.line_color
+            )
+            self.canvas.create_line(
+                pos, CELL_SIZE // 2,
+                pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2,
+                fill=self.line_color
+            )
+
+        # Points étoiles sur le carré 5x5 du centre
+        center = BOARD_SIZE // 2
+        offsets = [-2, 2]  # pour faire le carré 5x5
+        radius = 3  # rayon du petit point
+
+        for dx in offsets:
+            for dy in offsets:
+                x = (center + dx) * CELL_SIZE + CELL_SIZE // 2
+                y = (center + dy) * CELL_SIZE + CELL_SIZE // 2
+                self.canvas.create_oval(
+                    x - radius, y - radius,
+                    x + radius, y + radius,
+                    fill=self.line_color, outline=""
+                )
 
     def redraw(self, response):
         if response is None:
@@ -334,8 +355,8 @@ class GomokuGUI:
     def rules_choice(self):
         if self.rules == "swap":
             self.show_swap_popup("Règle Swap", "Le premier joueur place 2 pierre noires et 1 blanche\n Le second joueur choisira ensuite sa couleur", '400x200')
-        if self.rules == "swap2":
-            self.show_swap_popup("Règle Swap2", "Le premier joueur place 2 pierre noires et 1 blanche\n Le second joueur aura 3 choix :\n   -Garder les Blancs\n   -Changer de couleur\n   -Placer 2 pierres de plus et laisser\nle premiers joueur choisir sa couleur", '400x300')
+        if self.rules == "pro":
+            self.show_swap_popup("Règle Pro", "-Le premier joueur joue au milieu\n-Le second joueur n'a aucune de contrainte\n-Le 2e coup du  1er joueur doit etre\nen dehors du 5x5 du centre", '400x250')
         
 
     def show_swap_popup(self, title_, text_, geo):
@@ -409,46 +430,46 @@ class GomokuGUI:
         popup.grab_set()
         self.root.wait_window(popup)
 
-    def swap2_choice(self):
-        popup = tk.Toplevel(self.root)
-        popup.title("Règle Swap2")
-        popup.geometry("400x300")
-        popup.transient(self.root)  # fenêtre liée à la principale
-        popup.overrideredirect(True)
-        self.center_window(popup)
+    # def swap2_choice(self):
+    #     popup = tk.Toplevel(self.root)
+    #     popup.title("Règle Swap2")
+    #     popup.geometry("400x300")
+    #     popup.transient(self.root)  # fenêtre liée à la principale
+    #     popup.overrideredirect(True)
+    #     self.center_window(popup)
 
-        popup_bg = "#F0E6D2"  # beige clair
-        popup.configure(bg=popup_bg)
+    #     popup_bg = "#F0E6D2"  # beige clair
+    #     popup.configure(bg=popup_bg)
 
-        tk.Label(popup, text="Règle Swap2", font=("Arial", 14, "bold"), bg=popup_bg).pack(pady=20)
-        tk.Label(popup, text="Le second joueur choisi : ", font=("Arial", 12), bg=popup_bg).pack(pady=10)
+    #     tk.Label(popup, text="Règle Swap2", font=("Arial", 14, "bold"), bg=popup_bg).pack(pady=20)
+    #     tk.Label(popup, text="Le second joueur choisi : ", font=("Arial", 12), bg=popup_bg).pack(pady=10)
 
-        btn_style = {
-            "font": ("Arial", 14, "bold"),
-            "bg": popup_bg,
-            "fg": "#A17C5A",
-            "activebackground": "#5a5a8a",
-            "activeforeground": "white",
-            "relief": "flat",
-            "bd": 0,
-            "width": 15,
-            "height": 1,
-            "highlightthickness": 0
-        }
+    #     btn_style = {
+    #         "font": ("Arial", 14, "bold"),
+    #         "bg": popup_bg,
+    #         "fg": "#A17C5A",
+    #         "activebackground": "#5a5a8a",
+    #         "activeforeground": "white",
+    #         "relief": "flat",
+    #         "bd": 0,
+    #         "width": 15,
+    #         "height": 1,
+    #         "highlightthickness": 0
+    #     }
 
-        btn_frame = tk.Frame(popup, bg=popup_bg)
-        btn_frame.pack(pady=25)
+    #     btn_frame = tk.Frame(popup, bg=popup_bg)
+    #     btn_frame.pack(pady=25)
 
-        black_btn = tk.Button(btn_frame, text="Noirs", command=popup.destroy, **btn_style)
-        black_btn.pack(pady=5, fill="x")
+    #     black_btn = tk.Button(btn_frame, text="Noirs", command=popup.destroy, **btn_style)
+    #     black_btn.pack(pady=5, fill="x")
 
-        white_btn = tk.Button(btn_frame, text="Blancs", command=popup.destroy, **btn_style)
-        white_btn.pack(pady=5, fill="x")
+    #     white_btn = tk.Button(btn_frame, text="Blancs", command=popup.destroy, **btn_style)
+    #     white_btn.pack(pady=5, fill="x")
 
-        white_btn = tk.Button(btn_frame, text="Placer 2 pierres", command=popup.destroy, **btn_style)
-        white_btn.pack(pady=5, fill="x")
+    #     white_btn = tk.Button(btn_frame, text="Placer 2 pierres", command=popup.destroy, **btn_style)
+    #     white_btn.pack(pady=5, fill="x")
 
-        popup.after(10, lambda: popup.grab_set())
+    #     popup.after(10, lambda: popup.grab_set())
 
 
 #############################################
@@ -591,12 +612,12 @@ class OptionsMenu:
             # Option départ
             tk.Label(self.frame, text="Règle de départ", bg=self.BG).pack()
             self.start_buttons = {}
-            for opt in ["standard", "ai_first", "pro", "swap", "swap2"]:
+            for opt in ["standard", "ai_first", "pro", "swap"]:
                 btn = tk.Button(
                     self.frame, text=opt.capitalize(), width=12,
                     bg=self.BG, fg=self.BTN_TEXT,
                     relief="flat", bd=0, pady=5,
-                    command=lambda o=opt: self.select_option(self.start_var, o, self.start_buttons)
+                    command=lambda o=opt: self.select_option(self.start_var, o, self.start_buttons),
                 )
                 btn.pack(pady=2)
                 self.start_buttons[opt] = btn
