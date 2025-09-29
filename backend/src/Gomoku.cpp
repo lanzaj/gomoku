@@ -206,6 +206,7 @@ AiMoveResult   Gomoku::playAiTurn_(Player const & player, Player const & opponen
         //return {board.generateRecommended(player, opponent), elapsed};
         throw Board::AiException("Move not found");
     }
+    std::cout << board;
     return {ret, elapsed};
 }
 
@@ -247,10 +248,10 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
         << ", white 5s: " << board.getPlayerState_(Cell::White).align5
         << ", black 5s: " << board.getPlayerState_(Cell::Black).align5
         << ", white coord: "
-        << board.getPlayerState_(Cell::White).align5Coord.x << " " << board.getPlayerState_(Cell::Black).align5Coord.y << ", "
-        << ", black coord: "
+        << board.getPlayerState_(Cell::White).align5Coord.x << " " << board.getPlayerState_(Cell::White).align5Coord.y << ", "
+        << "black coord: "
         << board.getPlayerState_(Cell::Black).align5Coord.x << " " << board.getPlayerState_(Cell::Black).align5Coord.y << ", "
-        << ", suggestion: (" << suggestion.x << ", " << suggestion.y << ")"
+        << "suggestion: (" << suggestion.x << ", " << suggestion.y << ")"
         << std::endl;
 
     n_turn += 1;
