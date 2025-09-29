@@ -21,11 +21,14 @@ class Gomoku
         Server  server_;
         Player  p_black_;
         Player  p_white_;
-        std::string mode_;
-        bool    first_move_centered_;
-        int     size_;
+        std::string mode_ = "";
+        std::string start_option_ = "";
+        bool    first_move_centered_{};
+        bool    pro_flag_5x5_{};
+        int     size_{};
 
 
+        void    init_rule_();
         void    init_game_();
         bool    playTurn_(Player &player, Player &opponent);
         Coord   playHumanTurn_(Player const & player, Player const & opponent, Board & board);

@@ -15,7 +15,7 @@ class GomokuGUI:
     total_duration = 0
     move_count = 0
 
-    def __init__(self, root, mode, board_size, player_color, rules):
+    def __init__(self, root, mode, board_size, rules):
         self.rules = rules
         self.exit = False
         self.root = root
@@ -38,9 +38,14 @@ class GomokuGUI:
         self.bar(root)
 
         self.sock = self.sock_conn()
-        self.send({"mode": mode, "player_color": player_color, "start_option": rules, "board_size": board_size})
+        self.send({"mode": mode, "start_option": rules, "board_size": board_size})
 
         self.rules_choice()
+        if self.rules == 'ai_first':
+            print('foi')
+            self.redraw(self.receive())
+            self.root.update_idletasks()
+
 
         if not self.mode == 'demo':
             self.canvas.bind("<Button-1>", self.click_handler)
@@ -79,11 +84,13 @@ class GomokuGUI:
             )
             self.duration_label.pack(side="left", padx=10)
 
+        
+        # Buoton Exit
         exit_btn = tk.Button(
             self.title_bar,
-            text="Exit",               # croix
+            text="Exit",
             command=self.quit_game,
-            bg="#D2B48C",           # fond assorti à la barre
+            bg="#D2B48C",
             fg="#3F3529",
             bd=0,                   # pas de bordure
             relief="flat",
@@ -93,9 +100,36 @@ class GomokuGUI:
         )
         exit_btn.pack(side="right", padx=5)
 
+        # Bouton Menu
+        # (le bouton de retour au menu fonctionne mais le serveur n'accepte pas un nouvelle connection a une nouvelle socket après 29.09.25)
+
+        # menu_btn = tk.Button(
+        #     self.title_bar,
+        #     text="Menu",
+        #     command=self.back_to_menu,
+        #     bg="#D2B48C",
+        #     fg="#3F3529",
+        #     bd=0,
+        #     relief="flat",
+        #     font=("Arial", 12, "bold"),
+        #     highlightthickness=0,
+        #     activebackground="#C19A6B"
+        # )
+        # menu_btn.pack(side="right", padx=5)
+
         self.make_draggable(self.title_bar) # fenetre movible
 
+    def back_to_menu(self):
+        self.sock.close()
+        self.sock = None
+        self.send({"exit": True})
+        self.canvas.destroy()
+        self.title_bar.destroy()
+        StartMenu(self.root)
+
     def quit_game(self):
+        self.sock.close()
+        self.sock = None
         self.send({"exit": True})
         self.root.destroy()
 
@@ -395,6 +429,10 @@ class GomokuGUI:
         popup.after(10, lambda: popup.grab_set())
 
 
+#############################################
+#               Start Menu                  #
+#############################################
+
 class StartMenu:
     BG = "#F0E6D2"
     def __init__(self, root):
@@ -483,14 +521,16 @@ class StartMenu:
         y = event.y_root - self._dy
         self.root.geometry(f"+{x}+{y}")
         
-    ##############                 ##############
+    ##############  Initialisation option  ##############
 
     def go_options(self, mode):
         self.frame.destroy()
         self.title_bar.destroy()
         OptionsMenu(self.root, mode)
 
-    
+#############################################
+#               Options Menu                #
+#############################################
 
 class OptionsMenu:
     BG = "#F0E6D2"
@@ -508,27 +548,28 @@ class OptionsMenu:
         self.make_window_draggable(self.frame) # fenetre movible
         tk.Label(self.frame, text="Choisissez vos options", font=("Arial", 16), bg=self.BG).pack(pady=10)
 
-        self.color_var = tk.StringVar(value="black")
         self.start_var = tk.StringVar(value="standard")
+
         if self.mode == 'ai':
-            # Choix couleur
-            tk.Label(self.frame, text="Couleur du joueur", bg=self.BG).pack()
-            self.color_buttons = {}
-            for color, label in [("black", "Noir"), ("white", "Blanc")]:
-                btn = tk.Button(
-                    self.frame, text=label, width=12,
-                    bg=self.BG, fg=self.BTN_TEXT,
-                    relief="flat", bd=0, pady=5,
-                    command=lambda c=color: self.select_option(self.color_var, c, self.color_buttons)
-                )
-                btn.pack(pady=2)
-                self.color_buttons[color] = btn
-            self.select_option(self.color_var, "black", self.color_buttons)  # valeur par défaut
+
+            # Choix couleur (On a decidé d'abandonner le choix de la couleur et d'en faire un mode a part entière 29.09.25)
+            # tk.Label(self.frame, text="Couleur du joueur", bg=self.BG).pack()
+            # self.color_buttons = {}
+            # for color, label in [("black", "Noir"), ("white", "Blanc")]:
+            #     btn = tk.Button(
+            #         self.frame, text=label, width=12,
+            #         bg=self.BG, fg=self.BTN_TEXT,
+            #         relief="flat", bd=0, pady=5,
+            #         command=lambda c=color: self.select_option(self.color_var, c, self.color_buttons)
+            #     )
+            #     btn.pack(pady=2)
+            #     self.color_buttons[color] = btn
+            # self.select_option(self.color_var, "black", self.color_buttons)  # valeur par défaut
 
             # Option départ
             tk.Label(self.frame, text="Règle de départ", bg=self.BG).pack()
             self.start_buttons = {}
-            for opt in ["standard", "pro", "swap", "swap2"]:
+            for opt in ["standard", "ai_first", "pro", "swap", "swap2"]:
                 btn = tk.Button(
                     self.frame, text=opt.capitalize(), width=12,
                     bg=self.BG, fg=self.BTN_TEXT,
@@ -576,7 +617,7 @@ class OptionsMenu:
         y = event.y_root - self._dy
         self.root.geometry(f"+{x}+{y}")
 
-    ##############                   ##############
+    ##############  Initialisation  ##############
 
     def select_option(self, var, value, buttons):
         """Met à jour la sélection et change la couleur des boutons"""
@@ -594,16 +635,30 @@ class OptionsMenu:
             self.root,
             self.mode,
             self.size_var.get(),
-            self.color_var.get(),
             self.start_var.get()
         )
 
-    ############### Window ##############
+    ###############  Window  ##############
 
     def bar(self, root):
         # Barre de titre custom
         self.title_bar = tk.Frame(root, bg="#D2B48C", height=30)  # couleur "bois clair"
         self.title_bar.pack(fill="x", side="top")
+
+    # Bouton Menu
+        menu_btn = tk.Button(
+            self.title_bar,
+            text="Menu",
+            command=self.back_to_menu,
+            bg="#D2B48C",
+            fg="#3F3529",
+            bd=0,
+            relief="flat",
+            font=("Arial", 12, "bold"),
+            highlightthickness=0,
+            activebackground="#C19A6B"
+        )
+        menu_btn.pack(side="left", padx=5)
 
         exit_btn = tk.Button(
             self.title_bar,
@@ -618,6 +673,11 @@ class OptionsMenu:
             activebackground="#C19A6B"  # couleur au survol
         )
         exit_btn.pack(side="right", padx=5)
+
+    def back_to_menu(self):
+        self.frame.destroy()
+        self.title_bar.destroy()
+        StartMenu(self.root)
 
     def center_window(self, root):
         root.update_idletasks()

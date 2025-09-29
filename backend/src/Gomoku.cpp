@@ -22,6 +22,19 @@ std::ostream & operator<<(std::ostream & os, Gomoku const & instance)
 }
 
 // Functions
+void    Gomoku::init_rule_() {
+    if (start_option_ == "standard")
+        p_white_.setIsHuman(false);
+    else if (start_option_ == "ai_first") {
+        first_move_centered_ = true;
+        p_black_.setIsHuman(false);
+    }
+    else if (start_option_ == "pro") {
+        first_move_centered_ = true;
+        p_white_.setIsHuman(false);
+    }
+}
+
 void    Gomoku::init_game_() {
     json data = server_.init_mode();
     if (data.contains("mode"))
@@ -36,10 +49,18 @@ void    Gomoku::init_game_() {
     else
         throw Server::ProtocolError("Missing 'board_size' field in client message");
 
+    if (data.contains("start_option")) {
+        start_option_ = data["start_option"];
+    }
+    else
+        throw Server::ProtocolError("Missing 'start_option' field in client message");
+
+
     std::cout << "MODE DE JEU " << mode_ << std::endl;
     if (mode_ == "ai") {
-        p_white_.setIsHuman(false);
-    } else if (mode_ == "human") {}
+        init_rule_();
+    } 
+    else if (mode_ == "human") {}
     else if (mode_ == "demo") {
         p_black_.setIsHuman(false);
         p_white_.setIsHuman(false);
@@ -64,6 +85,12 @@ Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent, B
 
     while (true) {
         coord = server_.getCoord();
+        if (first_move_centered_) {
+            first_move_centered_ = false;
+            coord = {size_ / 2, size_ / 2};
+            pro_flag_5x5_ = true;
+            break;
+        }
 
         if (!board.checkInBound(coord.x, coord.y))
         {
@@ -91,6 +118,18 @@ Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent, B
                 server_.send_response(board, false, false, 0, player, opponent, {-1, -1});
                 continue;
             }
+        }
+
+        if (pro_flag_5x5_) {
+            if (!(size_ / 2 - 2 <= coord.x && coord.x <= size_ / 2 + 2 
+             && size_ / 2 - 2 <= coord.y && coord.y <= size_ / 2 + 2)) {
+                pro_flag_5x5_ = false;
+            }
+            else {
+                server_.send_response(board, false, false, 0, player, opponent, {-1, -1});
+                continue;
+            }
+
         }
 
         // All checks passed: valid move
