@@ -26,6 +26,7 @@ class Gomoku
         bool    first_move_centered_{};
         bool    pro_flag_5x5_{};
         int     size_{};
+        int     n_turn{};
 
 
         void    init_rule_();

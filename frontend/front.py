@@ -119,18 +119,10 @@ class GomokuGUI:
 
         self.make_draggable(self.title_bar) # fenetre movible
 
-    def back_to_menu(self):
-        self.sock.close()
-        self.sock = None
-        self.send({"exit": True})
-        self.canvas.destroy()
-        self.title_bar.destroy()
-        StartMenu(self.root)
 
     def quit_game(self):
-        self.sock.close()
-        self.sock = None
         self.send({"exit": True})
+        self.sock.close()
         self.root.destroy()
 
 
@@ -286,9 +278,15 @@ class GomokuGUI:
         if self.rules == 'swap' and response.get('game_state') and len(response['game_state']) == 3:
             self.swap_choice()
 
-        if self.rules =='swap2' and response.get('game_state') and len(response['game_state']) == 3:
-            self.swap2_choice()
+        # if self.rules =='swap2' and response.get('game_state') and len(response['game_state']) == 3:
+        #     self.swap2_choice()
         
+        if self.rules == 'swap' and len(response['game_state']) < 3:
+            return
+        
+        if self.rules == 'swap' and len(response['game_state']) == 3:
+            if response['swap']:
+                return
 
         if self.mode == 'ai':
             response = self.receive()
@@ -352,7 +350,7 @@ class GomokuGUI:
     def swap_choice(self):
         popup = tk.Toplevel(self.root)
         popup.title("Règle Swap")
-        popup.geometry("400x250")
+        popup.geometry("300x210")
         popup.transient(self.root)  # fenêtre liée à la principale
         popup.overrideredirect(True)
         self.center_window(popup)
@@ -361,7 +359,7 @@ class GomokuGUI:
         popup.configure(bg=popup_bg)
 
         tk.Label(popup, text="Règle Swap", font=("Arial", 14, "bold"), bg=popup_bg).pack(pady=20)
-        tk.Label(popup, text="Le second joueur choisie sa couleur", font=("Arial", 12), bg=popup_bg).pack(pady=10)
+        tk.Label(popup, text="Le second joueur a choisit :", font=("Arial", 12), bg=popup_bg).pack(pady=10)
 
         btn_style = {
             "font": ("Arial", 14, "bold"),
@@ -379,13 +377,11 @@ class GomokuGUI:
         btn_frame = tk.Frame(popup, bg=popup_bg)
         btn_frame.pack(pady=20)
 
-        black_btn = tk.Button(btn_frame, text="Noirs", command=popup.destroy, **btn_style)
+        black_btn = tk.Button(btn_frame, text="Ok", command=popup.destroy, **btn_style)
         black_btn.pack(pady=5, fill="x")
 
-        white_btn = tk.Button(btn_frame, text="Blancs", command=popup.destroy, **btn_style)
-        white_btn.pack(pady=5, fill="x")
-
-        popup.after(10, lambda: popup.grab_set())
+        popup.grab_set()
+        self.root.wait_window(popup)
 
     def swap2_choice(self):
         popup = tk.Toplevel(self.root)

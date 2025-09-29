@@ -33,6 +33,7 @@ void    Gomoku::init_rule_() {
         first_move_centered_ = true;
         p_white_.setIsHuman(false);
     }
+    else if (start_option_ == "swap") {}
 }
 
 void    Gomoku::init_game_() {
@@ -94,17 +95,17 @@ Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent, B
 
         if (!board.checkInBound(coord.x, coord.y))
         {
-            server_.send_response(board, false, false, 0, player, opponent, {-1, -1});
+            server_.send_response(board, false, false, 0, {-1, -1}, false);
             continue;
         }
         if (board.getCell(coord) != Cell::Empty)
         {
-            server_.send_response(board, false, false, 0, player, opponent, {-1, -1});
+            server_.send_response(board, false, false, 0, {-1, -1}, false);
             continue;
         }
         if (board.isForbiddenDoubleThree(coord, player.getColor()))
         {
-            server_.send_response(board, false, false, 0, player, opponent, {-1, -1});
+            server_.send_response(board, false, false, 0, {-1, -1}, false);
             continue;
         }
         if (board.getPlayerState_(opponent).align5) {
@@ -115,7 +116,7 @@ Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent, B
             if (std::find(capturingMoves.begin(), capturingMoves.end(), coord) 
                 == capturingMoves.end())
             {
-                server_.send_response(board, false, false, 0, player, opponent, {-1, -1});
+                server_.send_response(board, false, false, 0, {-1, -1}, false);
                 continue;
             }
         }
@@ -126,7 +127,7 @@ Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent, B
                 pro_flag_5x5_ = false;
             }
             else {
-                server_.send_response(board, false, false, 0, player, opponent, {-1, -1});
+                server_.send_response(board, false, false, 0, {-1, -1}, false);
                 continue;
             }
 
@@ -234,7 +235,7 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
     board_.push(board);
 
     Coord suggestion = {-1, -1};
-    if (player.isHuman() && opponent.isHuman())
+    if (player.isHuman() && opponent.isHuman() && mode_ == "human")
         suggestion = minimax(0, -INF, INF, true, player, opponent, {-1, -1}).bestMove;
 
     std::cout << "x:" << coord.x 
@@ -251,7 +252,23 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
         << board.getPlayerState_(Cell::Black).align5Coord.x << " " << board.getPlayerState_(Cell::Black).align5Coord.y << ", "
         << ", suggestion: (" << suggestion.x << ", " << suggestion.y << ")"
         << std::endl;
-    server_.send_response(board, win, true, result.timeMs, player, opponent, suggestion);
+
+    n_turn += 1;
+
+    if (n_turn == 3 && start_option_ == "swap") {
+        int score = board.evaluate(player, opponent, {9, 9});
+        std::cout << "score is : " << score << std::endl;
+        if (score >= 0) {
+            server_.send_response(board, win, true, 0, {-1, -1}, true);
+            player.setIsHuman(false); // Un humain joue au prochain tour
+        }
+        else {
+            server_.send_response(board, win, true, 0, {-1, -1}, false);
+            opponent.setIsHuman(false); // Une IA joue au prochain tour
+        }
+        return win;
+    }
+    server_.send_response(board, win, true, result.timeMs, suggestion, false);
 
     return win;
 }
