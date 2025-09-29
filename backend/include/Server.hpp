@@ -31,7 +31,7 @@ class Server
         json    init_mode();
         Coord   getCoord();
         void    waitDemoFront();
-        void    send_response(Board const & board, bool win, bool authorized, long long timeMs, Coord suggestion, bool swap);
+        void    send_response(Board const & board, bool win, bool authorized, long long timeMs, Coord suggestion, bool swap, int count_turn);
 
         // Exception
         class ProtocolError : public std::runtime_error {

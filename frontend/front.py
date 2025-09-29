@@ -11,9 +11,13 @@ PORT = 65433
 
 class GomokuGUI:
     BG = "burlywood3"
+    dark_mode = False
+    line_color = "#a37e4d"
+    game_state = []
     duration = 0
     total_duration = 0
     move_count = 0
+    ai_move = 0
 
     def __init__(self, root, mode, board_size, rules):
         self.rules = rules
@@ -83,7 +87,6 @@ class GomokuGUI:
                 font=("Arial", 12, "bold")
             )
             self.duration_label.pack(side="left", padx=10)
-
         
         # Buoton Exit
         exit_btn = tk.Button(
@@ -100,26 +103,38 @@ class GomokuGUI:
         )
         exit_btn.pack(side="right", padx=5)
 
-        # Bouton Menu
-        # (le bouton de retour au menu fonctionne mais le serveur n'accepte pas un nouvelle connection a une nouvelle socket après 29.09.25)
-
-        # menu_btn = tk.Button(
-        #     self.title_bar,
-        #     text="Menu",
-        #     command=self.back_to_menu,
-        #     bg="#D2B48C",
-        #     fg="#3F3529",
-        #     bd=0,
-        #     relief="flat",
-        #     font=("Arial", 12, "bold"),
-        #     highlightthickness=0,
-        #     activebackground="#C19A6B"
-        # )
-        # menu_btn.pack(side="right", padx=5)
+        # Buoton Theme
+        exit_btn = tk.Button(
+            self.title_bar,
+            text= "Mode",
+            command=self.change_theme,
+            bg="#D2B48C",
+            fg="#3F3529",
+            bd=0,                   # pas de bordure
+            relief="flat",
+            font=("Arial", 12, "bold"),
+            highlightthickness=0,
+            activebackground="#C19A6B"  # couleur au survol
+        )
+        exit_btn.pack(side="right", padx=5)
 
         self.make_draggable(self.title_bar) # fenetre movible
 
+    def change_theme(self):
+        # Toggle du dark mode
+        self.dark_mode = not self.dark_mode
 
+        if self.dark_mode:
+            self.BG = "#0a1017"
+            self.line_color = '#4d6d8d'
+        else:
+            self.BG = "burlywood3"
+            self.line_color = "#a37e4d"
+
+        # Mettre à jour le canvas
+        self.canvas.configure(bg=self.BG)
+        self.redraw({"game_state": self.game_state}) 
+    
     def quit_game(self):
         self.send({"exit": True})
         self.sock.close()
@@ -190,14 +205,15 @@ class GomokuGUI:
     def draw_board(self):
         for i in range(BOARD_SIZE):
             pos = i * CELL_SIZE + CELL_SIZE // 2
-            self.canvas.create_line(CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, pos, fill="#a37e4d")
-            self.canvas.create_line(pos, CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, fill="#a37e4d")
+            self.canvas.create_line(CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, pos, fill=self.line_color)
+            self.canvas.create_line(pos, CELL_SIZE // 2, pos, (BOARD_SIZE - 1) * CELL_SIZE + CELL_SIZE // 2, fill=self.line_color)
 
     def redraw(self, response):
         if response is None:
             return
         self.canvas.delete("all")
         self.draw_board()
+        self.game_state = response["game_state"]
         for stone in response["game_state"]:
             x, y, color = stone["x"], stone["y"], stone["color"]
             px = x * CELL_SIZE + CELL_SIZE // 2
@@ -212,9 +228,13 @@ class GomokuGUI:
                     outline=""
                 )
             else:
+                if self.dark_mode:
+                    fill_color = "#ee6677" if color == "black" else "#4ee8ca"
+                else:
+                    fill_color = color
                 self.canvas.create_oval(
                     px - radius, py - radius, px + radius, py + radius,
-                    fill=color,
+                    fill=fill_color,
                     outline=""
                 )
 
@@ -275,26 +295,28 @@ class GomokuGUI:
         self.handle_move(response)
         self.root.update_idletasks()
 
+        # Swap rules
         if self.rules == 'swap' and response.get('game_state') and len(response['game_state']) == 3:
-            self.swap_choice()
+            self.swap_choice(response['swap'])
+            if response['swap']:
+                return
+            
+        if self.rules == 'swap' and len(response['game_state']) < 3:
+            return
 
         # if self.rules =='swap2' and response.get('game_state') and len(response['game_state']) == 3:
         #     self.swap2_choice()
-        
-        if self.rules == 'swap' and len(response['game_state']) < 3:
-            return
-        
-        if self.rules == 'swap' and len(response['game_state']) == 3:
-            if response['swap']:
-                return
 
         if self.mode == 'ai':
             response = self.receive()
             self.duration = response.get('delay', 0)
             self.total_duration += self.duration
-            self.move_count += 1
-            avg = (self.total_duration / self.move_count) / 1000
-            self.duration_label.config(text=f"Durée : {self.duration/1000:.2f}s (moy : {avg:.2f}s)")
+            self.ai_move += 1
+            self.move_count = response['count_turn']
+            avg = (self.total_duration / self.ai_move) / 1000
+            # affichage barre
+            self.duration_label.config(text=f"Durée : {self.duration/1000:.2f}s  (moy : {avg:.2f}s)  Coup : {self.move_count}")
+            # affichage board
             self.handle_move(response)
 
 
@@ -347,10 +369,10 @@ class GomokuGUI:
         ok_btn = tk.Button(popup, text="OK", command=popup.destroy, **btn_style)
         ok_btn.pack(pady=20)
 
-    def swap_choice(self):
+    def swap_choice(self, swap):
         popup = tk.Toplevel(self.root)
         popup.title("Règle Swap")
-        popup.geometry("300x210")
+        popup.geometry("400x210")
         popup.transient(self.root)  # fenêtre liée à la principale
         popup.overrideredirect(True)
         self.center_window(popup)
@@ -358,8 +380,12 @@ class GomokuGUI:
         popup_bg = "#F0E6D2"  # beige clair
         popup.configure(bg=popup_bg)
 
+        text_ai = "de garder sa couleur"
+        if swap:
+            text_ai = "de swaper"
+
         tk.Label(popup, text="Règle Swap", font=("Arial", 14, "bold"), bg=popup_bg).pack(pady=20)
-        tk.Label(popup, text="Le second joueur a choisit :", font=("Arial", 12), bg=popup_bg).pack(pady=10)
+        tk.Label(popup, text="Le bot a choisit " + text_ai, font=("Arial", 12), bg=popup_bg).pack(pady=10)
 
         btn_style = {
             "font": ("Arial", 14, "bold"),

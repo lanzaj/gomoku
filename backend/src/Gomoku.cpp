@@ -95,17 +95,17 @@ Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent, B
 
         if (!board.checkInBound(coord.x, coord.y))
         {
-            server_.send_response(board, false, false, 0, {-1, -1}, false);
+            server_.send_response(board, false, false, 0, {-1, -1}, false, n_turn);
             continue;
         }
         if (board.getCell(coord) != Cell::Empty)
         {
-            server_.send_response(board, false, false, 0, {-1, -1}, false);
+            server_.send_response(board, false, false, 0, {-1, -1}, false, n_turn);
             continue;
         }
         if (board.isForbiddenDoubleThree(coord, player.getColor()))
         {
-            server_.send_response(board, false, false, 0, {-1, -1}, false);
+            server_.send_response(board, false, false, 0, {-1, -1}, false, n_turn);
             continue;
         }
         if (board.getPlayerState_(opponent).align5) {
@@ -116,7 +116,7 @@ Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent, B
             if (std::find(capturingMoves.begin(), capturingMoves.end(), coord) 
                 == capturingMoves.end())
             {
-                server_.send_response(board, false, false, 0, {-1, -1}, false);
+                server_.send_response(board, false, false, 0, {-1, -1}, false, n_turn);
                 continue;
             }
         }
@@ -127,7 +127,7 @@ Coord   Gomoku::playHumanTurn_(Player const & player, Player const & opponent, B
                 pro_flag_5x5_ = false;
             }
             else {
-                server_.send_response(board, false, false, 0, {-1, -1}, false);
+                server_.send_response(board, false, false, 0, {-1, -1}, false, n_turn);
                 continue;
             }
 
@@ -259,16 +259,16 @@ bool    Gomoku::playTurn_(Player &player, Player &opponent) {
         int score = board.evaluate(player, opponent, {9, 9});
         std::cout << "score is : " << score << std::endl;
         if (score >= 0) {
-            server_.send_response(board, win, true, 0, {-1, -1}, true);
+            server_.send_response(board, win, true, 0, {-1, -1}, true, n_turn);
             player.setIsHuman(false); // Un humain joue au prochain tour
         }
         else {
-            server_.send_response(board, win, true, 0, {-1, -1}, false);
+            server_.send_response(board, win, true, 0, {-1, -1}, false, n_turn);
             opponent.setIsHuman(false); // Une IA joue au prochain tour
         }
         return win;
     }
-    server_.send_response(board, win, true, result.timeMs, suggestion, false);
+    server_.send_response(board, win, true, result.timeMs, suggestion, false, n_turn);
 
     return win;
 }

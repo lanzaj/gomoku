@@ -82,7 +82,7 @@ json    Server::recv_json_() {
     return data;
 }
 
-void    Server::send_response(Board const & board, bool win, bool authorized, long long timeMs, Coord suggestion, bool swap) {
+void    Server::send_response(Board const & board, bool win, bool authorized, long long timeMs, Coord suggestion, bool swap, int count_turn) {
 
     json json_game_state = json::array();
 
@@ -116,7 +116,8 @@ void    Server::send_response(Board const & board, bool win, bool authorized, lo
         {"delay", timeMs},
         {"win", win},
         {"authorized", authorized},
-        {"swap", swap}
+        {"swap", swap},
+        {"count_turn", count_turn}
     };
 
     std::string response_str = response.dump();
