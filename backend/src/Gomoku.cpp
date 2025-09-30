@@ -196,7 +196,7 @@ AiMoveResult   Gomoku::playAiTurn_(Player const & player, Player const & opponen
     }
     // Timer
     auto start = std::chrono::high_resolution_clock::now();
-    MoveEval move = minimax(0, -INF, INF, true, player, opponent, {-1, -1});
+    MoveEval move = minimax(n_turn < 10 ? 1 : 0, -INF, INF, true, player, opponent, {-1, -1});
     auto end = std::chrono::high_resolution_clock::now();
     
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();

@@ -330,6 +330,8 @@ class GomokuGUI:
 
         if self.mode == 'ai':
             response = self.receive()
+            if not response:
+                return
             self.duration = response.get('delay', 0)
             self.total_duration += self.duration
             self.ai_move += 1
