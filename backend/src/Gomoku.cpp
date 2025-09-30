@@ -206,7 +206,7 @@ AiMoveResult   Gomoku::playAiTurn_(Player const & player, Player const & opponen
         //return {board.generateRecommended(player, opponent), elapsed};
         throw Board::AiException("Move not found");
     }
-    std::cout << board;
+    // std::cout << board;
     return {ret, elapsed};
 }
 
