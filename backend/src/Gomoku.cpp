@@ -203,7 +203,6 @@ AiMoveResult   Gomoku::playAiTurn_(Player const & player, Player const & opponen
     Coord ret = move.bestMove;
     
     if (ret.x == -1 || ret.y == -1) {
-        //return {board.generateRecommended(player, opponent), elapsed};
         throw Board::AiException("Move not found");
     }
     // std::cout << board;
