@@ -598,21 +598,6 @@ class OptionsMenu:
         self.start_var = tk.StringVar(value="standard")
 
         if self.mode == 'ai':
-
-            # Choix couleur (On a decidé d'abandonner le choix de la couleur et d'en faire un mode a part entière 29.09.25)
-            # tk.Label(self.frame, text="Couleur du joueur", bg=self.BG).pack()
-            # self.color_buttons = {}
-            # for color, label in [("black", "Noir"), ("white", "Blanc")]:
-            #     btn = tk.Button(
-            #         self.frame, text=label, width=12,
-            #         bg=self.BG, fg=self.BTN_TEXT,
-            #         relief="flat", bd=0, pady=5,
-            #         command=lambda c=color: self.select_option(self.color_var, c, self.color_buttons)
-            #     )
-            #     btn.pack(pady=2)
-            #     self.color_buttons[color] = btn
-            # self.select_option(self.color_var, "black", self.color_buttons)  # valeur par défaut
-
             # Option départ
             tk.Label(self.frame, text="Règle de départ", bg=self.BG).pack()
             self.start_buttons = {}
