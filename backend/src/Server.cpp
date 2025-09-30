@@ -33,7 +33,6 @@ void Server::run_server_() {
     address.sin_port = htons(PORT);
 
     if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
-        perror("bind failed");
         exit(EXIT_FAILURE);
     }
 
