@@ -46,11 +46,13 @@ void Board::setBoard(Cell color, Coord coord) {
     board_[coord.y][coord.x] = color;
     updateCapturable_(coord);
     updateAlignment_(coord);
-    for (auto dir : DIRECTIONS) {
-        int x = coord.x + dir.dx;
-        int y = coord.y + dir.dy;
-        if (checkInBound(x, y))
-            updateAlignment_({x, y});
+    if (color == Cell::Empty) {
+        for (auto dir : DIRECTIONS) {
+            int x = coord.x + dir.dx;
+            int y = coord.y + dir.dy;
+            if (checkInBound(x, y))
+                updateAlignment_({x, y});
+        }
     }
 }
 
