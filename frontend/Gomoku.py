@@ -50,24 +50,11 @@ class GomokuGUI:
             self.root.update_idletasks()
 
 
-        if not self.mode == 'demo':
-            self.canvas.bind("<Button-1>", self.click_handler)
-            self.hover_oval = None
-            self.canvas.bind("<Motion>", self.mouse_motion)
-            self.canvas.bind("<Leave>", self.clear_hover)
-        else:
-            while 1:
-                response = self.receive()
-                self.duration = response.get('delay', 0)
-                self.total_duration += self.duration
-                self.move_count += 1
-                avg = (self.total_duration / self.move_count) / 1000
-                self.duration_label.config(text=f"Durée : {self.duration/1000:.2f}s (moy : {avg:.2f}s)")
-                self.handle_move(response)
-                self.root.update_idletasks()
-                if response.get("win", False):
-                    break
-                self.send({'waiting':True})
+        self.canvas.bind("<Button-1>", self.click_handler)
+        self.hover_oval = None
+        self.canvas.bind("<Motion>", self.mouse_motion)
+        self.canvas.bind("<Leave>", self.clear_hover)
+
 
     ############## Window ##############
 
@@ -300,6 +287,21 @@ class GomokuGUI:
     def click_handler(self, event):
         if self.exit == True:
             exit()
+
+        if self.mode == "demo":
+            while 1:
+                    response = self.receive()
+                    self.duration = response.get('delay', 0)
+                    self.total_duration += self.duration
+                    self.move_count += 1
+                    avg = (self.total_duration / self.move_count) / 1000
+                    self.duration_label.config(text=f"Durée : {self.duration/1000:.2f}s (moy : {avg:.2f}s)")
+                    self.handle_move(response)
+                    self.root.update_idletasks()
+                    if response.get("win", False):
+                        break
+                    self.send({'waiting':True})
+            return
 
         x = int(round((event.x - CELL_SIZE / 2) / CELL_SIZE))
         y = int(round((event.y - CELL_SIZE / 2) / CELL_SIZE))
