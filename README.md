@@ -34,7 +34,7 @@ The AI adapts to the opponent’s strategy and responds in under half a second p
 Clone the repository and build the project:
 
 ```bash
-git clone https://github.com/lanzaj/gomoku-ai.git
+git clone https://github.com/lanzaj/gomoku.git
 make
 ```
 
@@ -48,8 +48,6 @@ The AI uses Minimax with alpha-beta pruning and a custom heuristic:
 - Evaluates board states for:
   - Alignment potential (open threes, open fours, threats)
   - Capture opportunities
-  - Defensive counterplay
-
 ---
 
 ## 📜 Rules Recap
@@ -69,4 +67,4 @@ The AI uses Minimax with alpha-beta pruning and a custom heuristic:
 - **Language:** C++, python
 - **UI Framework:** tkinter
 - **Build Tool:** Makefile (`make`, `make clean`)
-- **Unit Tests:** GoogleTest (run with `make test`)
+- **Unit Tests:** GoogleTest (run with `cd backend && make test`)
