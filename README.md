@@ -70,3 +70,8 @@ The AI uses Minimax with alpha-beta pruning and a custom heuristic:
 - **UI Framework:** tkinter
 - **Build Tool:** Makefile (`make`, `make clean`)
 - **Unit Tests:** GoogleTest (run with `make test`)
+
+
+## Credits
+
+- User interface designed by [Grégoire Gobert](https://github.com/gregoiregobert)
