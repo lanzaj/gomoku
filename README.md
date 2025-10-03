@@ -26,6 +26,7 @@ Captures occur when you place two of your stones at both ends of exactly two of 
 **Example:**
 
 White stones can capture the black stones by placing a stone
+
 ![Capture](./capture.png)
 
 ### Double Free Three
