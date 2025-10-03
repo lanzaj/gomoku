@@ -60,7 +60,7 @@ It is forbidden to place a black stone in the middle as it would introduce two d
 Clone the repository and build the project:
 
 ```bash
-git clone https://github.com/lanzaj/gomoku-ai.git
+git clone https://github.com/lanzaj/gomoku.git
 make
 ```
 
@@ -82,7 +82,7 @@ The AI uses Minimax with alpha-beta pruning and a custom heuristic:
 
 - **Language:** C++, python
 - **UI Framework:** tkinter
-- **Unit Tests:** GoogleTest (run with `make test`)
+- **Unit Tests:** GoogleTest (run with `cd backend && make test`)
 
 
 ## Credits
